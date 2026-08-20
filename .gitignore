@@ -1,0 +1,9 @@
+packer/output/
+*.ova
+crash.log
+*.pkrvars.hcl
+.packer.d/
+
+# Fichiers d'éditeur / OS
+.DS_Store
+*.swp
