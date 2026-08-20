@@ -1,7 +1,6 @@
 # Structure du dépôt
 
-Proposition de structure, à intégrer soit comme dépôt séparé
-`stephrobert/dsoxlab-runtime`, soit comme sous-dossier `runtime/` dans
+Proposition de structure, à intégrer comme sous-dossier `runtime/` dans
 `stephrobert/dsoxlab` — à trancher avec Stéphane selon la logique déjà
 établie pour les templates Terraform/cloud-init (déjà packagés dans
 `dsoxlab` lui-même).
