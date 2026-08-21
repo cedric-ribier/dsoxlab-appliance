@@ -9,6 +9,9 @@ apt-get autoremove -y
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 
+mv /tmp/first-boot-provider-setup.sh /usr/local/sbin/dsoxlab-provider-setup.sh
+chmod +x /usr/local/sbin/dsoxlab-provider-setup.sh
+
 find /var/log -type f -exec truncate -s 0 {} \;
 rm -rf /tmp/* /var/tmp/*
 
@@ -35,16 +38,6 @@ systemctl enable regenerate-ssh-host-keys.service
 
 rm -f /home/packer/.bash_history /root/.bash_history
 
-# --- Compte utilisateur final ---
-# "packer" n'a servi qu'à la construction de l'image (UID de build,
-# mot de passe faible connu publiquement via ce dépôt) — ce ne doit
-# jamais être le compte de connexion de l'appliance distribuée. Un
-# compte générique "user" est créé et "packer" est entièrement
-# supprimé, MAIS uniquement au premier démarrage réel — jamais pendant
-# le build : Packer reste connecté en SSH sous "packer" jusqu'à son
-# propre shutdown_command final, le supprimer maintenant casserait le
-# build (même classe de bug que le verrouillage de mot de passe
-# rencontré plus tôt ce soir).
 cat > /usr/local/sbin/dsoxlab-first-boot-setup.sh <<'SETUP'
 #!/bin/bash
 set -euo pipefail
@@ -79,14 +72,6 @@ ExecStart=/usr/local/sbin/dsoxlab-first-boot-setup.sh
 WantedBy=multi-user.target
 EOF
 systemctl enable dsoxlab-first-boot-setup.service
-
-# --- Providers vm en installation différée (piste "premier démarrage",
-# voir PLAN.md §5) — copié par le file provisioner vers /tmp, déplacé
-# ici vers son emplacement final. Dépend explicitement du compte "user"
-# déjà créé (After=), sinon l'ordre entre deux services oneshot n'est
-# pas garanti et usermod échouerait si "user" n'existe pas encore.
-mv /tmp/first-boot-provider-setup.sh /usr/local/sbin/dsoxlab-provider-setup.sh
-chmod +x /usr/local/sbin/dsoxlab-provider-setup.sh
 
 cat > /etc/systemd/system/dsoxlab-provider-setup.service <<'EOF'
 [Unit]
