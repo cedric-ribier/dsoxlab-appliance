@@ -66,6 +66,13 @@ découverte au moment de la publication :
    le poste le plus lourd) — décision à reporter à Stéphane si ce cas
    se présente, car ça rouvre la question du périmètre MVP.
 
+**Mesure effectuée** sur premier build > 2 Go
+
+1. Compression via `ovftool --compress=9` non concluant
+2. Réévaluer le contenu semble être la meilleure voie,
+   privilégier un provider me semble une bonne logique, 
+   choix à déterminé: `libvirt`/`incus`
+
 ### 1.4 Cohérence MVP / Phase 3 — hyperviseurs embarqués
 
 Le plan produit liste `libvirt`/`QEMU`/`Incus` dans le MVP (Phase 1),
