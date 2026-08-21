@@ -3,6 +3,9 @@ set -euo pipefail
 
 echo "==> 06-verify: vérification finale avant export"
 
+PROVIDERS="${DSOXLAB_PROVIDERS:-all}"
+export PATH="/opt/dsoxlab-runtime/bin:/opt/dsoxlab-runtime/mise/shims:$PATH"
+
 FAIL=0
 
 check() {
@@ -16,12 +19,18 @@ check() {
   fi
 }
 
-check "dsoxlab installé"    sudo -u packer bash -c 'export PATH="$HOME/.local/bin:$PATH"; dsoxlab --version'
-check "terraform installé"  sudo -u packer bash -c 'export PATH="$HOME/.local/bin:$PATH"; eval "$(mise activate bash)"; terraform version'
-check "ansible installé"    sudo -u packer bash -c 'export PATH="$HOME/.local/bin:$PATH"; ansible --version'
-check "ansible-runner installé" sudo -u packer bash -c 'export PATH="$HOME/.local/bin:$PATH"; ansible-runner --version'
-check "libvirtd activé (boot)"  systemctl is-enabled libvirtd
-check "incus activé (boot)"     systemctl is-enabled incus
+check "dsoxlab installé"        dsoxlab --version
+check "terraform installé"      terraform version
+check "ansible installé"        ansible --version
+check "ansible-runner installé" ansible-runner --version
+
+if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "kvm" ]; then
+  check "libvirtd activé (boot)"  systemctl is-enabled libvirtd
+fi
+if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "incus" ]; then
+  check "incus activé (boot)"     systemctl is-enabled incus
+fi
+
 check "aucun catalogue embarqué (~ vide de dépôts git)" bash -c '[ -z "$(find /home/packer -maxdepth 2 -iname ".git" 2>/dev/null)" ]'
 
 if [ "$FAIL" -ne 0 ]; then
@@ -29,4 +38,4 @@ if [ "$FAIL" -ne 0 ]; then
   exit 1
 fi
 
-echo "==> 06-verify: tous les contrôles passent"
+echo "==> 06-verify: tous les contrôles passent (scope: ${PROVIDERS})"

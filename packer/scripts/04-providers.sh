@@ -20,15 +20,22 @@ apt-get install -y \
 
 usermod -aG libvirt,kvm packer
 
-# Activé pour le démarrage de l'appliance finale, mais PAS démarré
-# maintenant : `systemctl enable` seul suffit, `start` échouerait ou
-# resterait en erreur silencieuse sans /dev/kvm sur certains postes de
-# build, ce qui casserait le provisioning sans rapport avec un vrai bug.
 systemctl enable libvirtd
 
-# --- Incus ---
-apt-get install -y extrepo
-extrepo enable incus
+# --- Incus (dépôt officiel Zabbly — extrepo ne référence pas Incus,
+# contrairement à ce qu'on avait supposé initialement) ---
+install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://pkgs.zabbly.com/key.asc -o /etc/apt/keyrings/zabbly.asc
+tee /etc/apt/sources.list.d/zabbly-incus-stable.sources >/dev/null <<EOF
+Enabled: yes
+Types: deb
+URIs: https://pkgs.zabbly.com/incus/stable
+Suites: $(. /etc/os-release && echo ${VERSION_CODENAME})
+Components: main
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/zabbly.asc
+EOF
+
 apt-get update
 apt-get install -y incus incus-client
 

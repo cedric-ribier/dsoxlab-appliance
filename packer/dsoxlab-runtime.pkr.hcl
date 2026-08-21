@@ -66,8 +66,8 @@ build {
       "scripts/02-uv-dsoxlab.sh",
       "scripts/03-terraform-ansible.sh",
       "scripts/04-providers.sh",
-      "scripts/05-cleanup.sh",
       "scripts/06-verify.sh",
+      "scripts/05-cleanup.sh",
     ]
   }
 

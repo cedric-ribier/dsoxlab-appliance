@@ -5,14 +5,14 @@ variable "image_version" {
 
 variable "iso_url" {
   type        = string
-  description = "URL de l'ISO netinst Debian 12"
-  default     = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.11.0-amd64-netinst.iso"
+  description = "URL de l'ISO netinst Debian 12 — chemin d'archive immuable (pas 'current/', qui glisse vers la nouvelle stable et casse le build sans prévenir, comme observé le 20/08/2026 quand trixie a remplacé bookworm sous current/)"
+  default     = "https://cdimage.debian.org/cdimage/archive/12.15.0/amd64/iso-cd/debian-12.15.0-amd64-netinst.iso"
 }
 
 variable "iso_checksum" {
   type        = string
-  description = "Checksum SHA256 de l'ISO, à vérifier/mettre à jour à chaque changement de version Debian"
-  default     = "file:https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/SHA256SUMS"
+  description = "Checksum SHA256 — à mettre à jour manuellement et délibérément à chaque bump de version, pas de suivi automatique de current/"
+  default     = "file:https://cdimage.debian.org/cdimage/archive/12.15.0/amd64/iso-cd/SHA256SUMS"
 }
 
 variable "ssh_username" {
