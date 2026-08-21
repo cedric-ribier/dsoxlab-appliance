@@ -5,29 +5,17 @@ echo "==> 05-cleanup: nettoyage avant export"
 
 export DEBIAN_FRONTEND=noninteractive
 
-# Purge cache apt et paquets non nécessaires à l'exécution
 apt-get autoremove -y
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 
-# Logs de build — inutiles dans l'image distribuée, et potentiellement
-# verbeux (sorties complètes de uv/ansible/terraform pendant le
-# provisioning)
 find /var/log -type f -exec truncate -s 0 {} \;
 rm -rf /tmp/* /var/tmp/*
 
-# machine-id — DOIT être régénéré au premier démarrage réel, sinon
-# toutes les VMs importées à partir de cette même OVA partagent le même
-# ID et ça casse potentiellement DHCP/systemd-networkd côté utilisateurs
-# finaux qui importent l'image plusieurs fois.
 truncate -s 0 /etc/machine-id
 rm -f /var/lib/dbus/machine-id
 ln -sf /etc/machine-id /var/lib/dbus/machine-id
 
-# Clés d'hôte SSH — à régénérer au premier démarrage, jamais distribuées
-# figées dans une image publique (risque de sécurité direct : n'importe
-# qui pourrait déchiffrer/usurper une session SSH vers n'importe quelle
-# instance de cette image).
 rm -f /etc/ssh/ssh_host_*
 cat > /etc/systemd/system/regenerate-ssh-host-keys.service <<'EOF'
 [Unit]
@@ -45,10 +33,22 @@ WantedBy=multi-user.target
 EOF
 systemctl enable regenerate-ssh-host-keys.service
 
-# Historique shell et identifiants de build — l'utilisateur "packer" et
-# son mot de passe faible (défini dans le preseed) ne doivent pas
-# survivre dans l'image distribuée.
 rm -f /home/packer/.bash_history /root/.bash_history
-passwd -l packer   # verrouille le mot de passe, le compte reste utilisable en clé SSH uniquement si besoin futur
+passwd -l packer
+
+cat > /etc/systemd/system/harden-sudo-first-boot.service <<'EOF'
+[Unit]
+Description=Retire le sudo NOPASSWD de build au premier démarrage réel
+Before=multi-user.target
+ConditionPathExists=/etc/sudoers.d/packer-nopasswd
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/rm -f /etc/sudoers.d/packer-nopasswd
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable harden-sudo-first-boot.service
 
 echo "==> 05-cleanup: terminé"

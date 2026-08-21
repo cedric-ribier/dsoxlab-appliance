@@ -3,6 +3,14 @@ set -euo pipefail
 
 echo "==> 01-base: mise à jour système et paquets essentiels"
 
+# NOPASSWD pour packer, dès maintenant — 05-cleanup.sh verrouille ce
+# compte en toute fin de provisioning (sécurité), mais Packer a encore
+# besoin d'élever ses privilèges après ça (shutdown_command final).
+# Sans NOPASSWD, ce verrouillage casse systématiquement la dernière
+# étape du build.
+echo "packer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/packer-nopasswd
+chmod 0440 /etc/sudoers.d/packer-nopasswd
+
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update

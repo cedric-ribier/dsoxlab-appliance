@@ -1,43 +1,35 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "==> 03-terraform-ansible: installation via mise + ansible-runner"
+echo "==> 03-terraform-ansible: installation via mise + ansible-runner (emplacement système)"
 
-sudo -u packer bash <<'EOF'
-set -euo pipefail
-export PATH="$HOME/.local/bin:$PATH"
-EOF
-
-# mise, installé au niveau système pour que Terraform soit disponible
-# sans dépendre d'une session utilisateur spécifique — cohérent avec le
-# guide d'installation référencé pour ce projet
-# (blog.stephane-robert.info/.../installer-terraform/)
 sudo apt-get install -y extrepo
 sudo extrepo enable mise
 sudo apt-get update
 sudo apt-get install -y mise
 
-sudo -u packer bash <<'EOF'
-set -euo pipefail
-export PATH="$HOME/.local/bin:$PATH"
-eval "$(mise activate bash)"
+export MISE_DATA_DIR=/opt/dsoxlab-runtime/mise
+mkdir -p "$MISE_DATA_DIR"
+
+export PATH="/opt/dsoxlab-runtime/bin:$PATH"
 mise use --global terraform@1.14.8
 mise install
-terraform version
-EOF
+"$MISE_DATA_DIR/shims/terraform" version
 
-# ansible-core (déjà partiellement couvert par dsoxlab, installé ici en
-# garantie explicite — cf. constat de l'audit #40 sur cette dépendance
-# manquante) + ansible-runner, requis par dsoxlab pour jouer les
-# setup.yaml des labs.
-sudo -u packer bash <<'EOF'
-set -euo pipefail
-export PATH="$HOME/.local/bin:$PATH"
+export UV_TOOL_DIR=/opt/dsoxlab-runtime/uv-tools
+export UV_TOOL_BIN_DIR=/opt/dsoxlab-runtime/bin
+
 uv tool install ansible-core
 uv tool install ansible-runner
 
-"$HOME/.local/bin/ansible" --version
-"$HOME/.local/bin/ansible-runner" --version
+"$UV_TOOL_BIN_DIR/ansible" --version
+"$UV_TOOL_BIN_DIR/ansible-runner" --version
+
+chmod -R a+rX /opt/dsoxlab-runtime
+
+cat > /etc/profile.d/dsoxlab-runtime-path.sh <<'EOF'
+export PATH="/opt/dsoxlab-runtime/bin:/opt/dsoxlab-runtime/mise/shims:$PATH"
 EOF
+chmod +x /etc/profile.d/dsoxlab-runtime-path.sh
 
 echo "==> 03-terraform-ansible: terminé"
