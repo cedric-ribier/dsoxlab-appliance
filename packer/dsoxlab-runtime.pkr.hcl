@@ -66,6 +66,9 @@ build {
 
   provisioner "shell" {
     execute_command = "echo '${var.ssh_password}' | sudo -S -E bash '{{ .Path }}'"
+    environment_vars = [
+      "DSOXLAB_PROVIDERS=${var.providers}"
+    ]
     scripts = [
       "scripts/01-base.sh",
       "scripts/02-uv-dsoxlab.sh",
