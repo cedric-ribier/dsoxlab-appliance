@@ -59,6 +59,11 @@ build {
   name    = "dsoxlab-runtime"
   sources = ["source.virtualbox-iso.dsoxlab-runtime"]
 
+  provisioner "file" {
+    source      = "scripts/first-boot-provider-setup.sh"
+    destination = "/tmp/first-boot-provider-setup.sh"
+  }
+
   provisioner "shell" {
     execute_command = "echo '${var.ssh_password}' | sudo -S -E bash '{{ .Path }}'"
     scripts = [

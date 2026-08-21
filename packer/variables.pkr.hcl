@@ -41,3 +41,9 @@ variable "cpus" {
   type    = number
   default = 2
 }
+
+variable "providers" {
+  type        = string
+  description = "Providers de virtualisation à embarquer : 'none' (shell-only), 'incus', 'kvm', ou 'all' — permet de mesurer le poids réel de chaque combinaison avant de trancher (voir PLAN.md, section mesures)"
+  default     = "all"
+}
