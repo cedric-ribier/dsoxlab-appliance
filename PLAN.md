@@ -149,3 +149,85 @@ proposée : **build mensuel automatique (cron), publication conditionnelle**.
 5. Mettre en place le pipeline CI (`.github/workflows/build-release.yml`)
    une fois la validation manuelle concluante.
 6. Ne pas publier tant que #78 n'est pas disponible (§1.4).
+
+---
+
+## 4. Journal de build — première exécution réelle (20/08/2026)
+
+Premier `packer build` complet, sur poste VirtualBox (Intel i9, sans
+virtualisation imbriquée). Plusieurs bugs découverts uniquement à
+l'exécution — aucun n'était détectable par relecture ou `packer
+validate` seul.
+
+### Bugs corrigés
+
+1. **`iso_url`/`iso_checksum` pointant vers `current/`** — ce chemin
+   suit la dernière stable, qui a basculé de bookworm (12) à trixie (13)
+   entre l'écriture de ce fichier et son exécution. Corrigé en épinglant
+   une version exacte via le chemin d'archive immuable
+   (`/cdimage/archive/12.15.0/...`), qui ne bouge plus dans le temps —
+   plus robuste pour la reproductibilité que de suivre `current/`.
+2. **Preseed LVM incomplet** — deux confirmations d'écriture disque
+   (`partman/confirm` et la confirmation LVM elle-même) n'étaient pas
+   couvertes, l'installeur restait bloqué en attente d'une validation
+   manuelle. Ajout de `partman-lvm/confirm` et
+   `partman-lvm/confirm_nooverwrite`.
+3. **`mise activate bash` silencieusement no-op en contexte non-interactif**
+   — le mécanisme d'activation par hooks de shell ne fonctionne pas dans
+   un `heredoc` exécuté par un provisioner Packer, donc `terraform`
+   restait absent du PATH malgré une installation réussie. Remplacé par
+   un ajout direct du dossier de shims mise au PATH
+   (`$HOME/.local/share/mise/shims`), qui ne dépend d'aucun hook shell.
+4. **`extrepo enable incus` — dépôt inexistant** — `extrepo` ne
+   référence pas Incus du tout. Remplacé par la méthode officielle
+   (dépôt Zabbly, clé GPG + fichier source configurés manuellement).
+5. **Verrouillage total du compte `packer` cassant les étapes suivantes**
+   — `passwd -l packer` invalidait l'authentification `sudo -S` par
+   mot de passe utilisée par Packer pour tous les scripts suivants, y
+   compris son propre `shutdown_command` final. Première correction :
+   `sudo` NOPASSWD dès le premier script (retiré au premier démarrage
+   réel de l'appliance, service systemd dédié). Deuxième correction,
+   découverte en testant une vraie connexion après import : le
+   verrouillage total rendait aussi l'appliance **inutilisable** pour
+   l'utilisateur final (aucun moyen de se connecter). Remplacé par
+   `chage -d 0 packer`, qui force un changement de mot de passe à la
+   première connexion plutôt que de bloquer l'accès.
+
+### Mesure de taille réelle
+
+Scope testé : `shell` + providers complets (libvirt/QEMU/Incus).
+
+| | |
+| --- | --- |
+| Taille produite | 2 188 069 888 octets (≈ 2,04 Gio / 2,19 Go) |
+| Limite GitHub Release | 2 147 483 648 octets (2 Gio, doc officielle) |
+| Dépassement | ≈ 39 Mio (≈ 1,8 %) |
+
+Test de compression `ovftool --compress=9` : **résultat contre-intuitif**,
+la taille compressée est légèrement **supérieure** à l'originale.
+Explication probable : l'export `virtualbox-iso` produit déjà un VMDK
+en mode stream-optimized (compressé nativement à l'export), donc la
+recompression n'a rien à gagner et ajoute de l'overhead (manifeste,
+réempaquetage). La compression seule ne résout donc pas la contrainte
+de taille sur cette chaîne d'export.
+
+### Validation fonctionnelle
+
+OVA testée avec succès : import et démarrage réussis sur VirtualBox et
+sur VMware Fusion (après une erreur au premier essai, résolue au
+second). Confirme la portabilité d'un artefact unique
+`virtualbox-iso` → export OVA vers les deux écosystèmes.
+
+### Ce qui reste à faire avant de considérer ce build validé
+
+- [ ] Rebuild avec le correctif `chage -d 0` et test de connexion réel
+      (mot de passe par défaut fonctionnel une fois, puis changement
+      forcé) — pas encore vérifié en conditions réelles.
+- [ ] Validation `shell` complète (`dsoxlab doctor` + lab réel) une
+      fois connecté.
+- [ ] Validation `vm` sur poste VMware Fusion (nested virt) — KVM/Incus
+      pas encore testés en fonctionnement réel, seulement installés.
+
+Ce build (`0.1.0-dev`) reste un jalon technique interne, pas un
+candidat à publication — cohérent avec la mise en pause du sujet
+(voir réponse de Stéphane sur dsoxlab#91).
