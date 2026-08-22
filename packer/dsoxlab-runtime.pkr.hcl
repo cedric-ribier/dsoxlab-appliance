@@ -27,7 +27,7 @@ source "virtualbox-iso" "dsoxlab-runtime" {
     "install ",
     "auto=true priority=critical ",
     "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
-    "debian-installer=en_US.UTF-8 locale=en_US.UTF-8 ",
+    "debian-installer=fr_FR.UTF-8 locale=fr_FR.UTF-8 ",
     "hostname=dsoxlab-runtime domain=local ",
     "keyboard-configuration/xkb-keymap=fr ",
     "<enter>"
@@ -45,8 +45,13 @@ source "virtualbox-iso" "dsoxlab-runtime" {
   # la virtualisation imbriquée disponible.
   guest_additions_mode = "disable"
 
+  vboxmanage = [
+    ["modifyvm", "{{.Name}}", "--vram", "16"]
+  ]
+
   vboxmanage_post = [
-    ["modifyvm", "{{.Name}}", "--nic1", "bridged", "--bridgeadapter1", "${var.bridge_adapter}"]
+    ["modifyvm", "{{.Name}}", "--nic1", "bridged", "--bridgeadapter1", "${var.bridge_adapter}"],
+    ["modifyvm", "{{.Name}}", "--nicpromisc1", "allow-all"]
   ] 
 
   export_opts = [
