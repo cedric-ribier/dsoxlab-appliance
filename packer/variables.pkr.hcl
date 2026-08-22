@@ -28,18 +28,26 @@ variable "ssh_password" {
 
 variable "disk_size_mb" {
   type        = number
-  description = "Taille du disque en Mo — 20 Go, cohérent avec les prérequis mesurés de l'audit #40"
+  description = "Taille du disque en Mo — 20 Go, prérequis minimum mesuré par l'audit #40"
   default     = 20480
 }
 
 variable "memory_mb" {
-  type    = number
-  default = 2048
+  type        = number
+  description = "RAM en Mo — 8 Go, prérequis minimum mesuré par l'audit #40. Ne pas fixer plus haut sans savoir si ce sont les specs de l'appliance distribuée (l'environnement d'accueil final décide de ce qu'il peut réellement allouer, pas la machine de build)."
+  default     = 8192
 }
 
 variable "cpus" {
-  type    = number
-  default = 2
+  type        = number
+  description = "vCPU — 4, prérequis minimum mesuré par l'audit #40"
+  default     = 4
+}
+
+variable "bridge_adapter" {
+  type        = string
+  description = "Interface réseau physique de la machine de BUILD à utiliser pour le pont réseau (ex. 'en0' sur Mac Wi-Fi) — n'a pas d'incidence sur l'appliance exportée elle-même (l'utilisateur final choisit sa propre interface à l'import), sert seulement à ce que VirtualBox accepte la config au moment du build. Vérifier avec `VBoxManage list bridgedifs`."
+  default     = "en0"
 }
 
 variable "providers" {

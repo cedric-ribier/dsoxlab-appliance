@@ -45,6 +45,10 @@ source "virtualbox-iso" "dsoxlab-runtime" {
   # la virtualisation imbriquée disponible.
   guest_additions_mode = "disable"
 
+  vboxmanage_post = [
+    ["modifyvm", "{{.Name}}", "--nic1", "bridged", "--bridgeadapter1", "${var.bridge_adapter}"]
+  ] 
+
   export_opts = [
     "--manifest",
     "--vsys", "0",
