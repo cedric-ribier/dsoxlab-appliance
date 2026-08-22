@@ -83,11 +83,15 @@ ConditionPathExists=/usr/local/sbin/dsoxlab-provider-setup.sh
 [Service]
 Type=oneshot
 ExecStart=/usr/local/sbin/dsoxlab-provider-setup.sh
-ExecStartPost=/bin/systemctl disable dsoxlab-provider-setup.service
 
 [Install]
 WantedBy=multi-user.target
 EOF
 systemctl enable dsoxlab-provider-setup.service
+
+echo "==> Mise à zéro de l'espace libre avant export (peut prendre plusieurs minutes)"
+dd if=/dev/zero of=/EMPTY bs=1M 2>/dev/null || true
+rm -f /EMPTY
+sync
 
 echo "==> 05-cleanup: terminé"

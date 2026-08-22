@@ -4,11 +4,7 @@
 # figée dans l'image, voir PLAN.md §5.
 #
 # Détection provisoire : flag kernel nested-virt en dur. À remplacer
-# par un appel à `dsoxlab doctor` une fois disponible (#78) — proposer
-# alors une commande séparée en lecture seule (`doctor --check
-# nested-virt`) plutôt que de faire agir doctor lui-même, pour ne pas
-# transformer un outil de diagnostic en outil d'installation. Voir
-# PLAN.md §5 pour la discussion complète.
+# par un appel à `dsoxlab doctor` une fois disponible (#78).
 
 set -euo pipefail
 
@@ -29,7 +25,7 @@ detect_nested_virt() {
 }
 
 if ! detect_nested_virt; then
-  log "Virtualisation imbriquée non détectée — providers vm non installés. Labs shell disponibles normalement."
+  log "Virtualisation imbriquée non détectée — providers vm non installés. Labs shell disponibles normalement. Le service retentera au prochain démarrage."
   exit 0
 fi
 
@@ -37,7 +33,6 @@ log "Virtualisation imbriquée détectée — installation des providers vm..."
 
 export DEBIAN_FRONTEND=noninteractive
 
-# --- KVM / libvirt ---
 apt-get update
 apt-get install -y \
   qemu-kvm \
@@ -52,7 +47,6 @@ systemctl enable --now libvirtd
 
 echo "  /var/lib/libvirt/images/** rwk," >> /etc/apparmor.d/local/abstractions/libvirt-qemu
 
-# --- Incus (dépôt Zabbly) ---
 install -d -m 0755 /etc/apt/keyrings
 curl -fsSL https://pkgs.zabbly.com/key.asc -o /etc/apt/keyrings/zabbly.asc
 tee /etc/apt/sources.list.d/zabbly-incus-stable.sources >/dev/null <<EOF
