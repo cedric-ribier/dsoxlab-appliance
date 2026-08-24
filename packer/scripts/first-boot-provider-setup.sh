@@ -56,9 +56,10 @@ EOF
 apt-get update
 apt-get install -y incus incus-client
 
-usermod -aG incus-admin user
+usermod -aG incus,incus-admin user
 systemctl enable --now incus
 
 log "Providers vm installés avec succès."
 
 systemctl disable dsoxlab-provider-setup.service 2>/dev/null || true
+
