@@ -42,6 +42,9 @@ cat > /usr/local/sbin/dsoxlab-first-boot-setup.sh <<'SETUP'
 #!/bin/bash
 set -euo pipefail
 
+rm -f /etc/resolv.conf
+ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+
 useradd -m -s /bin/bash user
 echo "user:MotDePasse" | chpasswd
 chage -d 0 user

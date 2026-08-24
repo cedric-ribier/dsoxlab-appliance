@@ -38,8 +38,6 @@ EOF
 systemctl disable networking.service 2>/dev/null || true
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
-rm -f /etc/resolv.conf
-ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
 apt-get update
 apt-get upgrade -y
