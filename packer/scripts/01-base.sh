@@ -19,6 +19,28 @@ chmod 0440 /etc/sudoers.d/packer-nopasswd
 
 export DEBIAN_FRONTEND=noninteractive
 
+apt-get install -y systemd-resolved
+
+cat > /etc/network/interfaces <<'EOF'
+auto lo
+iface lo inet loopback
+EOF
+
+mkdir -p /etc/systemd/network
+cat > /etc/systemd/network/10-dhcp.network <<'EOF'
+[Match]
+Name=en*
+
+[Network]
+DHCP=yes
+EOF
+
+systemctl disable networking.service 2>/dev/null || true
+systemctl enable systemd-networkd
+systemctl enable systemd-resolved
+rm -f /etc/resolv.conf
+ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+
 apt-get update
 apt-get upgrade -y
 apt-get install -y \
