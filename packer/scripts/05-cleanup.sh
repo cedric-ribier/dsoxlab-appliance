@@ -42,8 +42,29 @@ cat > /usr/local/sbin/dsoxlab-first-boot-setup.sh <<'SETUP'
 #!/bin/bash
 set -euo pipefail
 
-rm -f /etc/resolv.conf
-ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+# --- Réseau portable entre hyperviseurs ---
+# Adaptation automatique de l'interface réseau
+IFACE=$(ip -o link show \
+  | awk -F': ' '$2 != "lo" {print $2}' \
+  | grep '^en' \
+  | head -n1)
+
+if [ -n "$IFACE" ]; then
+  cat >/etc/network/interfaces <<EOF
+# Interface détectée automatiquement au premier démarrage
+# DSOXLab Runtime
+# Configuration générée automatiquement au premier démarrage
+# afin d'adapter la VM à l'hyperviseur utilisé.
+
+auto lo
+iface lo inet loopback
+
+allow-hotplug $IFACE
+iface $IFACE inet dhcp
+EOF
+
+  systemctl restart networking || true
+fi
 
 useradd -m -s /bin/bash user
 echo "user:MotDePasse" | chpasswd
