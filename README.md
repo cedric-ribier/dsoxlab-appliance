@@ -12,7 +12,7 @@ Image d'exécution OVA embarquant le moteur dsoxlab (Debian, `dsoxlab`,
 Terraform, Ansible, `ansible-runner`, libvirt/QEMU, Incus), destinée en
 priorité aux utilisateurs Windows/macOS sans environnement Linux natif.
 Aucun catalogue de labs embarqué — le choix se fait au premier
-démarrage via `dsoxlab init`.
+démarrage via `dsoxlab catalogs list`.
 
 ## Où regarder en premier
 
@@ -28,9 +28,8 @@ démarrage via `dsoxlab init`.
 - [x] Définition Packer écrite (`virtualbox-iso`, export OVA natif)
 - [x] Scripts de provisioning rédigés et vérifiés syntaxiquement
 - [x] Workflow CI écrit (build mensuel, publication conditionnelle)
-- [ ] **Pas encore buildé ni testé en conditions réelles** — en attente
-      de retour sur les points ouverts avant d'investir du temps de
-      build/validation
+- [x] Premier build effectué, tester sur mon environnement Virtualbox (sans virtualisation imbriqué)
+      VMware Fusion (virtualisation imbriqué), reste à tester sur un autre environnement
 - [ ] Aucune publication prévue avant la disponibilité du contrôle
       `doctor` de détection de virtualisation imbriquée
       ([stephrobert/dsoxlab#78](https://github.com/stephrobert/dsoxlab/issues/78))
