@@ -12,7 +12,13 @@ export MISE_DATA_DIR=/opt/dsoxlab-runtime/mise
 mkdir -p "$MISE_DATA_DIR"
 
 export PATH="/opt/dsoxlab-runtime/bin:$PATH"
-mise use --global terraform@1.14.8
+
+mkdir -p /etc/mise
+cat > /etc/mise/config.toml <<'EOF'
+[tools]
+terraform = "1.14.8"
+EOF
+
 mise install
 "$MISE_DATA_DIR/shims/terraform" version
 
