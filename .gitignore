@@ -7,3 +7,4 @@ crash.log
 # Fichiers d'éditeur / OS
 .DS_Store
 *.swp
+*.log
