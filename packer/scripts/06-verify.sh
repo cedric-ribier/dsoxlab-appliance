@@ -3,6 +3,16 @@ set -euo pipefail
 
 echo "==> 06-verify: vérification finale avant export"
 
+if ! grep -q '^XKBLAYOUT="fr"' /etc/default/keyboard; then
+  echo " [INFO] Correction de la configuration clavier vers FR"
+
+  sed -i 's/^XKBLAYOUT=.*/XKBLAYOUT="fr"/' /etc/default/keyboard
+
+  if ! grep -q '^XKBLAYOUT=' /etc/default/keyboard; then
+    echo 'XKBLAYOUT="fr"' >> /etc/default/keyboard
+  fi
+fi
+
 PROVIDERS="${DSOXLAB_PROVIDERS:-all}"
 export PATH="/opt/dsoxlab-runtime/bin:/opt/dsoxlab-runtime/mise/shims:$PATH"
 
@@ -23,6 +33,7 @@ check "dsoxlab installé"        dsoxlab --version
 check "terraform installé"      terraform version
 check "ansible installé"        ansible --version
 check "ansible-runner installé" ansible-runner --version
+check "clavier FR configuré" grep -q '^XKBLAYOUT="fr"' /etc/default/keyboard
 
 if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "kvm" ]; then
   check "libvirtd activé (boot)"  systemctl is-enabled libvirtd

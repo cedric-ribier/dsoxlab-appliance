@@ -11,11 +11,11 @@ echo "==> 01-base: mise à jour système et paquets essentiels"
 echo "packer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/packer-nopasswd
 chmod 0440 /etc/sudoers.d/packer-nopasswd
 
-echo "keyboard-configuration keyboard-configuration/layoutcode select fr" | debconf-set-selections
-echo "keyboard-configuration keyboard-configuration/modelcode select pc105" | debconf-set-selections
-DEBIAN_FRONTEND=noninteractive dpkg-reconfigure keyboard-configuration
-systemctl restart keyboard-setup.service 2>/dev/null || true
-setupcon --force 2>/dev/null || true
+#echo "keyboard-configuration keyboard-configuration/layoutcode select fr" | debconf-set-selections
+#echo "keyboard-configuration keyboard-configuration/modelcode select pc105" | debconf-set-selections
+#DEBIAN_FRONTEND=noninteractive dpkg-reconfigure keyboard-configuration
+#systemctl restart keyboard-setup.service 2>/dev/null || true
+#setupcon --force 2>/dev/null || true
 
 export DEBIAN_FRONTEND=noninteractive
 
