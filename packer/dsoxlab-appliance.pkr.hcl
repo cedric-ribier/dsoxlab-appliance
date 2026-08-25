@@ -7,8 +7,8 @@ packer {
   }
 }
 
-source "virtualbox-iso" "dsoxlab-runtime" {
-  vm_name       = "dsoxlab-runtime-${var.image_version}"
+source "virtualbox-iso" "dsoxlab-appliance" {
+  vm_name       = "dsoxlab-appliance-${var.image_version}"
   guest_os_type = "Debian_64"
 
   iso_url      = var.iso_url
@@ -28,7 +28,7 @@ source "virtualbox-iso" "dsoxlab-runtime" {
     "auto=true priority=critical ",
     "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
     "debian-installer=fr_FR.UTF-8 locale=fr_FR.UTF-8 ",
-    "hostname=dsoxlab-runtime domain=local ",
+    "hostname=dsoxlab-appliance domain=local ",
     "keyboard-configuration/xkb-keymap=fr ",
     "<enter>"
   ]
@@ -61,12 +61,12 @@ source "virtualbox-iso" "dsoxlab-runtime" {
     "--version", var.image_version
   ]
   format = "ova"
-  output_directory = "output/dsoxlab-runtime-${var.image_version}"
+  output_directory = "output/dsoxlab-appliance-${var.image_version}"
 }
 
 build {
-  name    = "dsoxlab-runtime"
-  sources = ["source.virtualbox-iso.dsoxlab-runtime"]
+  name    = "dsoxlab-appliance"
+  sources = ["source.virtualbox-iso.dsoxlab-appliance"]
 
   provisioner "file" {
     source      = "scripts/first-boot-provider-setup.sh"
@@ -90,11 +90,11 @@ build {
 
   post-processor "checksum" {
     checksum_types = ["sha256"]
-    output         = "output/dsoxlab-runtime-${var.image_version}/SHA256SUMS"
+    output         = "output/dsoxlab-appliance-${var.image_version}/SHA256SUMS"
   }
 
   post-processor "manifest" {
-    output     = "output/dsoxlab-runtime-${var.image_version}/manifest.json"
+    output     = "output/dsoxlab-appliance-${var.image_version}/manifest.json"
     strip_path = true
   }
 }
