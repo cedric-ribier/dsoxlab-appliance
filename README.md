@@ -1,41 +1,82 @@
-# dsoxlab-runtime — brouillon de proposition
+# dsoxlab-appliance
 
-⚠️ **Ceci est un brouillon de travail**, pas une release ni un dépôt
-officiel. Proposé en réponse à
-[stephrobert/dsoxlab#91](https://github.com/stephrobert/dsoxlab/issues/91),
-en attente d'arbitrage sur plusieurs points avant toute publication ou
-intégration.
+*[Version française](README.fr.md)*
 
-## Contexte
+> **Status: proposal, validated proof-of-concept — not merged, not published.**
+> Written in response to [stephrobert/dsoxlab#91](https://github.com/stephrobert/dsoxlab/issues/91).
+> The topic itself is currently paused upstream (recurring maintenance cost
+> of an image supply chain outweighs the benefit until the project's
+> contract is frozen — see #76/#77 — and provisioning is recoverable — see
+> #107). This repository exists to keep a working, tested answer ready for
+> when the topic resumes, and to give something concrete to review now
+> rather than a plan on paper.
 
-Image d'exécution OVA embarquant le moteur dsoxlab (Debian, `dsoxlab`,
-Terraform, Ansible, `ansible-runner`, libvirt/QEMU, Incus), destinée en
-priorité aux utilisateurs Windows/macOS sans environnement Linux natif.
-Aucun catalogue de labs embarqué — le choix se fait au premier
-démarrage via `dsoxlab catalogs list`.
+## What this is
 
-## Où regarder en premier
+A build definition (Packer + Debian 12) for a runtime appliance —
+`dsoxlab`, Terraform, Ansible, `ansible-runner` — targeting Windows and
+macOS users without a native Linux environment. No lab catalog is
+embedded: the catalog is chosen on first boot via `dsoxlab catalog add`.
 
-| Document | Contenu |
+KVM/libvirt and Incus are **not baked into the image**. They install
+themselves automatically on first real boot, only if the host actually
+supports nested virtualization — detected live, not assumed. This keeps
+the base image small (comfortably under GitHub's 2 GiB release-asset
+limit) and keeps the security-sensitive hypervisor stack always
+freshly patched rather than frozen at build time.
+
+## What's validated
+
+- Builds cleanly from a Debian 12.15 netinst via Packer/VirtualBox.
+- Boots and completes first-run setup on **both** VirtualBox and VMware
+  Fusion from the same `.ova` artifact.
+- Network adapts automatically to whichever hypervisor imported it
+  (interface name is detected at first boot, not hardcoded from the
+  build machine — VirtualBox and VMware Fusion name NICs differently).
+- KVM/libvirt and Incus install themselves on first boot when nested
+  virtualization is available, confirmed on VMware Fusion (Intel
+  host); do **not** attempt anything (and don't waste space or expose
+  extra attack surface) when it isn't.
+- French/AZERTY locale works end-to-end (build-time author's own
+  keyboard); the underlying mechanism generalizes to any preseed
+  locale/layout.
+- Final image size below the 2 GiB GitHub Release limit.
+
+## What isn't validated yet
+
+- Independent testing by someone other than the author.
+- A from-scratch build by someone other than the author (this
+  repository's own reproducibility, not just the appliance's).
+- CI-driven builds — no self-hosted runner is set up yet (see
+  [`PLAN.md`](PLAN.md) for why GitHub-hosted runners aren't a real
+  option here).
+
+## Where to look
+
+| Document | What's in it |
 | --- | --- |
-| [`PLAN.md`](./PLAN.md) | Décisions d'implémentation, roadmap, points résolus depuis le cadrage initial |
-| [`REPO-LAYOUT.md`](./REPO-LAYOUT.md) | Structure proposée, question dépôt séparé vs sous-dossier de `dsoxlab` |
-| [`RELEASE.md`](./RELEASE.md) | Procédure complète : build local, validation VirtualBox + VMware, publication |
-| [`packer/`](./packer) | Définition Packer, scripts de provisioning, workflow CI |
+| [`PLAN.md`](PLAN.md) | Architecture, decisions made and why, open questions |
+| [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Repository structure |
+| [`RELEASE.md`](RELEASE.md) | Build, validate, and publish, step by step |
+| [`packer/`](packer/) | The actual Packer definition, provisioning scripts, CI workflow |
 
-## État actuel
+## License
 
-- [x] Définition Packer écrite (`virtualbox-iso`, export OVA natif)
-- [x] Scripts de provisioning rédigés et vérifiés syntaxiquement
-- [x] Workflow CI écrit (build mensuel, publication conditionnelle)
-- [x] Premier build effectué, tester sur mon environnement Virtualbox (sans virtualisation imbriqué)
-      VMware Fusion (virtualisation imbriqué), reste à tester sur un autre environnement
-- [ ] Aucune publication prévue avant la disponibilité du contrôle
-      `doctor` de détection de virtualisation imbriquée
-      ([stephrobert/dsoxlab#78](https://github.com/stephrobert/dsoxlab/issues/78))
+Apache License 2.0, matching [stephrobert/dsoxlab](https://github.com/stephrobert/dsoxlab).
 
-## Points en attente d'arbitrage
+## Open questions for review
 
-Voir la section correspondante dans [`PLAN.md`](./PLAN.md#1-décisions-dimplémentation-au-delà-du-plan-produit) :
-hébergement du dépôt final, hébergement du runner CI self-hosted,
-cadence exacte de publication.
+See [`PLAN.md`](PLAN.md#open-questions) for the full list — the two
+that matter most before anything here could be merged:
+
+1. **Who hosts the CI runner?** Building with `virtualbox-iso` needs a
+   machine with VirtualBox installed. GitHub-hosted runners don't
+   officially support nested virtualization (GitHub's own docs call
+   any use "experimental, at your own risk"). Self-hosting is the only
+   reliable option found; the author can offer one, but that's a
+   dependency on personal infrastructure worth discussing openly for
+   a community project.
+2. **Bilingual documentation maintenance.** Following dsoxlab's own
+   convention (every root README ships EN + FR) has a recurring
+   translation-sync cost of its own — worth naming rather than
+   assuming silently.

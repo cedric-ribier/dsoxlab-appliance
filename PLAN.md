@@ -1,240 +1,168 @@
-# Plan — dsoxlab-runtime (image d'exécution OVA)
+# Plan — dsoxlab-appliance
 
-Ce document reprend le *Release Plan* de Stéphane Robert tel quel sur les
-points déjà tranchés, et documente les décisions complémentaires
-nécessaires pour passer du plan à une implémentation réelle : choix du
-builder Packer, gestion de la contrainte de taille GitHub Releases,
-séparation construction/validation liée à l'absence de virtualisation
-imbriquée sur le poste de build, et cadence de publication.
+*[Version française](PLAN.fr.md)*
 
-Objectif de ce document : pouvoir l'exécuter étape par étape sans
-zone d'ombre, du premier commit jusqu'à la publication de la Release.
+This document reflects the current, validated state of the proposal —
+not a chronological build log. For the detailed bug-by-bug history of
+how each decision was reached, see the git history of this repository;
+this file states conclusions and reasoning, not the debugging path.
 
----
+## 1. Scope decision
 
-## 1. Décisions d'implémentation (au-delà du plan produit)
+**Shell-only base image, with providers installed on demand at first
+boot.** This was an open question earlier in the design (bake in
+KVM/Incus vs. keep the image minimal); it's now settled by evidence,
+not by preference:
 
-### 1.1 Builder Packer unique : `virtualbox-iso`
+- The base image (Debian 12, `dsoxlab`, Terraform, Ansible,
+  `ansible-runner`) stays comfortably under the GitHub Release 2 GiB
+  limit.
+- Baking in KVM/libvirt/Incus adds real, permanent maintenance cost
+  (CVE surface, rebuild-on-vulnerability obligation) for users whose
+  host will never support nested virtualization anyway (Hyper-V
+  active, WSL2, Apple Silicon) — pure waste for them.
+- A first-boot script detects nested virtualization live (CPU flags
+  via `/proc/cpuinfo`, not a kernel module parameter file that may not
+  exist yet — see §3) and installs KVM/libvirt and Incus only when
+  it's actually usable. Confirmed working end-to-end on VMware Fusion
+  with an Intel host.
+- This also sidesteps the "which provider" debate: the appliance
+  supports both `kvm` (used by `linux-dsoxlab-training`'s `vm` labs)
+  and `incus`, installed together when nested virt is available,
+  rather than forcing a choice at build time.
 
-Un seul artefact source, exporté nativement en OVA — pas de build
-`vmware-iso` séparé, pour éviter la dépendance CI à `ovftool`
-(propriétaire, compte Broadcom, indisponible sur runners GitHub-hosted
-standards).
+## 2. Build architecture
 
-**Conséquence assumée** : l'OVA VMware n'est pas construite par un
-pipeline VMware natif, mais par **import puis re-validation manuelle**
-de l'OVA produite par VirtualBox dans VMware Fusion/Workstation. C'est
-suffisant car le format OVA (OVF + disque) est un standard neutre, pas
-propriétaire à VirtualBox.
+- **Base OS**: Debian 12.15 (bookworm), installed via automated
+  preseed from the immutable archive path
+  (`cdimage.debian.org/cdimage/archive/12.15.0/...`) — not `current/`,
+  which tracks whatever is the latest stable release and silently
+  breaks builds when a new Debian major version supersedes it (this
+  happened once during development: bookworm → trixie switch broke
+  the pinned URL without warning).
+- **Builder**: `virtualbox-iso`, exporting directly to OVA. A single
+  build artifact is imported and validated on both VirtualBox and
+  VMware Fusion — no separate VMware-specific build path, which would
+  require `ovftool` (proprietary, Broadcom account) and complicate CI.
+- **Runtime tools**: installed under `/opt/dsoxlab-appliance`, not under
+  any user's home directory. The build-time account (`packer`) is
+  deleted entirely on first real boot, along with its home — anything
+  installed under `/home/packer` would be destroyed with it. `uv`,
+  `mise`, and their installed tools are relocated via
+  `UV_INSTALL_DIR`/`UV_TOOL_DIR`/`UV_TOOL_BIN_DIR`/`MISE_DATA_DIR`.
+  Terraform's version pin lives in `/etc/mise/config.toml` (a genuine
+  system-wide location) rather than `mise use --global`, which writes
+  to `~/.config/mise/config.toml` — tied to whichever account ran the
+  command, which was `packer`, now deleted.
 
-### 1.2 Construction vs validation — deux machines, deux rôles
+## 3. First-boot mechanisms
 
-Point critique identifié : le poste de build (le mien, VirtualBox sans
-virtualisation imbriquée disponible) peut **construire** l'image sans
-restriction — installer Debian, `dsoxlab`, Terraform, Ansible, les
-paquets `libvirt`/`qemu-kvm`/`incus` est de l'installation de paquets
-classique, aucune dépendance à `/dev/kvm` pendant le build.
+Everything that must reflect the *deployed* environment rather than
+the *build* environment happens via `systemd` oneshot services enabled
+at build time but only executed on the real first boot:
 
-Ce même poste ne peut pas **valider** que les labs `vm` fonctionnent
-réellement dans l'image produite (ça nécessite la virtualisation
-imbriquée, absente ici). D'où deux étapes distinctes et obligatoires,
-jamais fusionnées :
+- **`dsoxlab-first-boot-setup.service`** — creates the final `user`
+  account (default password, forced change on first login via
+  `chage -d 0`), deletes `packer` and its NOPASSWD sudo grant, and
+  fixes network interface naming (see below).
+- **`dsoxlab-provider-setup.service`** — detects nested virtualization
+  via `/proc/cpuinfo` (`vmx`/`svm` flags), not
+  `/sys/module/kvm_intel/parameters/nested` (that file only exists
+  once the `kvm_intel` module is loaded, which it isn't on a
+  shell-only image that's never needed it — an earlier version of this
+  detection produced false negatives on VMware Fusion for exactly this
+  reason). Installs KVM/libvirt/Incus only if detected. Does **not**
+  disable itself on a negative detection — it retries on every boot
+  until it succeeds once, so enabling nested virtualization after
+  first import (a manual step on VMware Fusion/VirtualBox) still
+  works without a rebuild.
+- **Network portability** — the Debian installer bakes the network
+  interface name detected *at build time* into
+  `/etc/network/interfaces` (e.g. `enp0s3` under VirtualBox). Once
+  exported and imported into a different hypervisor, the virtual PCI
+  topology differs and the interface gets a different name (e.g.
+  `ens32`/`enp2s0` under VMware Fusion) — the hardcoded config matches
+  nothing, DHCP never starts. Fixed by detecting the actual interface
+  name at first boot and regenerating `/etc/network/interfaces`
+  accordingly, keeping the traditional `ifupdown` approach (consistent
+  with what's already documented for a beginner audience) rather than
+  switching to `systemd-networkd` (tried first; broke DNS resolution
+  mid-build when applied at build time instead of first boot, and
+  added a dependency the traditional approach doesn't need).
 
-| Étape | Où | Quoi |
-| --- | --- | --- |
-| Build | Poste VirtualBox (le mien) | `packer build` → OVA brute |
-| Validation shell | Poste VirtualBox (le mien) | Import OVA, `dsoxlab doctor`, lab `shell` complet |
-| Validation vm | Poste VMware Fusion (nested virt confirmée) | Import de la **même** OVA, test KVM/Incus réel |
+## 4. Why these specific fixes, not others
 
-Les scripts de provisioning Packer (`04-providers.sh`) **installent et
-activent au démarrage** les paquets `libvirt`/`qemu-kvm`/`incus`, sans
-jamais tenter de démarrer `libvirtd` ni tester `/dev/kvm` *pendant* le
-build — pour rester non-bloquants quel que soit le poste de build.
+A few decisions worth flagging explicitly, since they weren't obvious
+on the first attempt:
 
-### 1.3 Contrainte de taille (2 Go / fichier GitHub Release)
+- **Keyboard layout**: preseeding `keyboard-configuration/layoutcode`
+  and `console-setup/layoutcode` directly does *not* work reliably —
+  both are documented as "for internal use" in Debian's own debconf
+  template reference, derived internally from the public
+  `keyboard-configuration/xkb-keymap` question rather than meant to be
+  set directly. The working preseed uses only `xkb-keymap` +
+  `modelcode`; `06-verify.sh` also carries a build-time fallback that
+  corrects `/etc/default/keyboard` directly if the installer still
+  ignores the preseed for some environments.
+- **`environment_vars` silently ignored**: Packer's `shell` provisioner
+  only injects `environment_vars` when `execute_command` explicitly
+  references `{{ .Vars }}`. A custom `execute_command` (needed here for
+  `sudo -S` password piping) that omits this reference computes the
+  variables internally but never actually passes them to the script —
+  no error, just silent failure. This was the root cause of an entire
+  evening's worth of "the `providers` scope isn't respected" symptoms.
+  Documented upstream: [hashicorp/packer#12687](https://github.com/hashicorp/packer/issues/12687).
 
-Absente du plan produit — à traiter explicitement en Phase 1, pas
-découverte au moment de la publication :
+## 5. CI and publication
 
-1. Mesurer la taille réelle de l'OVA après le premier build complet.
-2. Si < 2 Go : rien à faire.
-3. Si > 2 Go : compression via `ovftool --compress=9` en post-traitement
-   avant publication (pas de split multi-fichiers, plus simple côté
-   utilisateur final).
-4. Si la compression ne suffit toujours pas : réévaluer le contenu
-   embarqué (les paquets `libvirt`/`qemu-kvm`/`incus` sont probablement
-   le poste le plus lourd) — décision à reporter à Stéphane si ce cas
-   se présente, car ça rouvre la question du périmètre MVP.
+### Cadence
+Monthly automated build attempt; publication only if the build's
+content actually changed since the last published Release (diff on a
+content hash) — resolves the tension between "publish on a fixed
+schedule" and "only republish when the base changes" (an earlier,
+narrower framing of the same question).
 
-**Mesure effectuée** sur premier build > 2 Go
+### Runner
+`virtualbox-iso` requires an actual VirtualBox installation. GitHub
+does not officially support nested virtualization on hosted runners —
+their own documentation explicitly disclaims it as experimental with
+no stability guarantee. This is not a workaround-able limitation for a
+project that values reproducibility; a self-hosted runner is the only
+reliable option identified. **Open question**: who hosts it (see
+below).
 
-1. Compression via `ovftool --compress=9` non concluant
-2. Réévaluer le contenu semble être la meilleure voie,
-   privilégier un provider me semble une bonne logique, 
-   choix à déterminé: `libvirt`/`incus`
+### Size
+Confirmed: shell-only base measures well under GitHub's 2 GiB
+per-file Release limit. No compression step was needed once the
+correct scope (shell-only, providers deferred) was settled — an
+earlier attempt at `ovftool --compress=9` on a providers-included
+build produced a *larger* file, not smaller (VirtualBox's own
+stream-optimized VMDK export is already close to optimal for that
+content; recompressing added manifest/repackaging overhead without
+reclaiming anything, since `rm`-deleted blocks aren't zeroed unless a
+dedicated pass does it before export).
 
-### 1.4 Cohérence MVP / Phase 3 — hyperviseurs embarqués
+## 6. Open questions
 
-Le plan produit liste `libvirt`/`QEMU`/`Incus` dans le MVP (Phase 1),
-mais le contrôle `doctor` de détection de virtualisation imbriquée
-n'arrive qu'en Phase 3. Stéphane travaille déjà sur ce contrôle dans
-[#78](https://github.com/stephrobert/dsoxlab/issues/78) — pas
-d'implémentation de notre côté sur ce point.
+Points that need Stéphane's input before this could move toward being
+merged, listed by how much they block everything else:
 
-Décision d'implémentation retenue ici, en attendant que #78 soit prêt :
-les hyperviseurs restent dans le MVP (cohérent avec le plan produit),
-mais **aucune Release n'est publiée avant que le contrôle `doctor`
-existe et soit intégré** — le MVP peut être construit et testé en
-interne dès maintenant, sans attendre #78, mais sa publication publique
-est bloquée jusqu'à cette dépendance. Ça évite de distribuer une image
-qui expose au risque documenté dans #36 (provisioning qui expire
-silencieusement).
-
-### 1.5 Cadence de publication
-
-Tension identifiée entre "republication mensuelle" et "republication
-seulement si la base change" (position initiale de Stéphane). Résolution
-proposée : **build mensuel automatique (cron), publication conditionnelle**.
-
-- Le pipeline CI tourne chaque mois (date à fixer, ex. 1er du mois).
-- Il compare le hash du contenu généré (versions des paquets embarqués)
-  à celui de la dernière Release publiée.
-- Publication **seulement si différence détectée**, avec incrément de
-  version automatique (patch si dépendances runtime, mineur si base OS
-  ou hyperviseur).
-- Sinon, le run se termine sans publier — traçable dans les logs CI,
-  aucun bruit côté Releases GitHub.
-
----
-
-## 2. Roadmap (reprise du plan produit, phases inchangées)
-
-### Phase 0 — Validation du concept
-- Analyse des images existantes (#28, #29) — **déjà couvert** : elles
-  ont été construites manuellement, hors critères (pas de Packer/CI, pas
-  de SHA256SUMS/attestation) ; elles ont servi à valider la faisabilité
-  technique (virtualisation imbriquée confirmée VirtualBox et VMware sur
-  mon setup), pas comme base de code à reprendre telle quelle.
-- Décision écrite : l'image est un runtime dsoxlab, pas une image de
-  labs. **Validé.**
-
-### Phase 1 — MVP
-- Format unique : OVA, construit via `virtualbox-iso`, validé par
-  import dans VMware.
-- Contenu : Debian 12 LTS, dsoxlab, Terraform, Ansible, ansible-runner,
-  Incus, libvirt, QEMU (installés/activés au démarrage, non testés au
-  build).
-- Premier démarrage : `dsoxlab init` (mécanisme de Stéphane, pas
-  réimplémenté ici).
-- Documentation : README dédié (import VMware/VirtualBox, configuration
-  recommandée, public cible, limitations).
-- Publication bloquée tant que le contrôle `doctor` (#78) n'est pas
-  disponible — voir §1.4.
-
-### Phase 2 — Runtime Qualification
-- Mesure réelle (pas estimée) des prérequis matériels sur les 4 cas de
-  test listés dans le plan produit (Linux Training shell, Terraform
-  Training shell, provider libvirt, provider Incus).
-
-### Phase 3 — Nested Virtualization
-- Contrôle `doctor` — porté par #78, pas par ce projet.
-- Débloque la publication du MVP une fois disponible (voir §1.4).
-
-### Phase 4 — Formats complémentaires
-- qcow2, VHDX, UTM/QEMU aarch64 — hors périmètre de ce document, sujet
-  séparé comme indiqué dans le plan produit.
-
----
-
-## 3. Prochaines étapes concrètes
-
-1. Construire le premier OVA en local (`packer build`) — voir `packer/`.
-2. Mesurer sa taille réelle, ajuster la stratégie de compression si
-   nécessaire (§1.3).
-3. Valider `shell` sur mon poste VirtualBox.
-4. Valider `vm` (import de la même OVA) sur mon poste VMware Fusion.
-5. Mettre en place le pipeline CI (`.github/workflows/build-release.yml`)
-   une fois la validation manuelle concluante.
-6. Ne pas publier tant que #78 n'est pas disponible (§1.4).
-
----
-
-## 4. Journal de build — première exécution réelle (20/08/2026)
-
-Premier `packer build` complet, sur poste VirtualBox (Intel i9, sans
-virtualisation imbriquée). Plusieurs bugs découverts uniquement à
-l'exécution — aucun n'était détectable par relecture ou `packer
-validate` seul.
-
-### Bugs corrigés
-
-1. **`iso_url`/`iso_checksum` pointant vers `current/`** — ce chemin
-   suit la dernière stable, qui a basculé de bookworm (12) à trixie (13)
-   entre l'écriture de ce fichier et son exécution. Corrigé en épinglant
-   une version exacte via le chemin d'archive immuable
-   (`/cdimage/archive/12.15.0/...`), qui ne bouge plus dans le temps —
-   plus robuste pour la reproductibilité que de suivre `current/`.
-2. **Preseed LVM incomplet** — deux confirmations d'écriture disque
-   (`partman/confirm` et la confirmation LVM elle-même) n'étaient pas
-   couvertes, l'installeur restait bloqué en attente d'une validation
-   manuelle. Ajout de `partman-lvm/confirm` et
-   `partman-lvm/confirm_nooverwrite`.
-3. **`mise activate bash` silencieusement no-op en contexte non-interactif**
-   — le mécanisme d'activation par hooks de shell ne fonctionne pas dans
-   un `heredoc` exécuté par un provisioner Packer, donc `terraform`
-   restait absent du PATH malgré une installation réussie. Remplacé par
-   un ajout direct du dossier de shims mise au PATH
-   (`$HOME/.local/share/mise/shims`), qui ne dépend d'aucun hook shell.
-4. **`extrepo enable incus` — dépôt inexistant** — `extrepo` ne
-   référence pas Incus du tout. Remplacé par la méthode officielle
-   (dépôt Zabbly, clé GPG + fichier source configurés manuellement).
-5. **Verrouillage total du compte `packer` cassant les étapes suivantes**
-   — `passwd -l packer` invalidait l'authentification `sudo -S` par
-   mot de passe utilisée par Packer pour tous les scripts suivants, y
-   compris son propre `shutdown_command` final. Première correction :
-   `sudo` NOPASSWD dès le premier script (retiré au premier démarrage
-   réel de l'appliance, service systemd dédié). Deuxième correction,
-   découverte en testant une vraie connexion après import : le
-   verrouillage total rendait aussi l'appliance **inutilisable** pour
-   l'utilisateur final (aucun moyen de se connecter). Remplacé par
-   `chage -d 0 packer`, qui force un changement de mot de passe à la
-   première connexion plutôt que de bloquer l'accès.
-
-### Mesure de taille réelle
-
-Scope testé : `shell` + providers complets (libvirt/QEMU/Incus).
-
-| | |
-| --- | --- |
-| Taille produite | 2 188 069 888 octets (≈ 2,04 Gio / 2,19 Go) |
-| Limite GitHub Release | 2 147 483 648 octets (2 Gio, doc officielle) |
-| Dépassement | ≈ 39 Mio (≈ 1,8 %) |
-
-Test de compression `ovftool --compress=9` : **résultat contre-intuitif**,
-la taille compressée est légèrement **supérieure** à l'originale.
-Explication probable : l'export `virtualbox-iso` produit déjà un VMDK
-en mode stream-optimized (compressé nativement à l'export), donc la
-recompression n'a rien à gagner et ajoute de l'overhead (manifeste,
-réempaquetage). La compression seule ne résout donc pas la contrainte
-de taille sur cette chaîne d'export.
-
-### Validation fonctionnelle
-
-OVA testée avec succès : import et démarrage réussis sur VirtualBox et
-sur VMware Fusion (après une erreur au premier essai, résolue au
-second). Confirme la portabilité d'un artefact unique
-`virtualbox-iso` → export OVA vers les deux écosystèmes.
-
-### Ce qui reste à faire avant de considérer ce build validé
-
-- [ ] Rebuild avec le correctif `chage -d 0` et test de connexion réel
-      (mot de passe par défaut fonctionnel une fois, puis changement
-      forcé) — pas encore vérifié en conditions réelles.
-- [ ] Validation `shell` complète (`dsoxlab doctor` + lab réel) une
-      fois connecté.
-- [ ] Validation `vm` sur poste VMware Fusion (nested virt) — KVM/Incus
-      pas encore testés en fonctionnement réel, seulement installés.
-
-Ce build (`0.1.0-dev`) reste un jalon technique interne, pas un
-candidat à publication — cohérent avec la mise en pause du sujet
-(voir réponse de Stéphane sur dsoxlab#91).
+1. **CI runner ownership.** Self-hosted is required (§5). The author
+   can offer one, but that's a dependency on personal infrastructure —
+   worth an explicit decision for a community project rather than a
+   default nobody chose.
+2. **Bilingual documentation maintenance cost.** This repository
+   already follows dsoxlab's own convention (root README + PLAN +
+   REPO-LAYOUT + RELEASE all ship EN + FR). Worth naming that this is
+   itself a recurring cost, not free — consistent with the very
+   argument that paused this whole topic.
+3. **License**: proposed as Apache License 2.0, matching
+   [stephrobert/dsoxlab](https://github.com/stephrobert/dsoxlab)'s
+   current `LICENSE` file (a discrepancy was noticed between GitHub's
+   live page — Apache 2.0 — and an older PyPI package page — CC BY
+   4.0 — likely a stale snapshot from an earlier release; GitHub's
+   live source was treated as authoritative).
+4. **Third-party independent validation.** Everything above is
+   validated on the author's own machines only (Intel Mac, VirtualBox
+   + VMware Fusion). No test yet by someone building from scratch on a
+   different machine.
