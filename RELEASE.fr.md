@@ -12,14 +12,9 @@ invisibles avec un seul hyperviseur testé.
 
 La procédure a été validée avec :
 
-| Composant | Version |
-|------------|------------|
-| Debian netinst | 12.15.0 |
-| VirtualBox | 7.2.14 - 7.2.16 |
-| Packer | 1.15.4 - 1.16 |
-| Git | 2.50.1 - 2.51.0 |
-| VMware Fusion | 13.6.2 |
-| VMware Workstation | 26.0.025388281 |
+| Composant | Debian netinst | VirtualBox | Packer | Git | VMware Fusion | VMware Workstation |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Version(s) | 12.15.0 | 7.2.14 - 7.2.16 | 1.15.4 - 1.16 | 2.50.1 - 2.51.0 | 13.6.2 | 26.0.0 (25388281) |
 
 D'autres versions peuvent fonctionner mais n'ont pas été vérifiées.
 
