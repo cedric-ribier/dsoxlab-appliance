@@ -29,17 +29,17 @@ Prérequis matériels
 
 Configuration minimale recommandée :
 
-CPU 4 cœurs
-8 Go de RAM
-50 Go d'espace disque libre
-Connexion Internet
+- CPU 4 cœurs
+- 8 Go de RAM
+- 50 Go d'espace disque libre
+- Connexion Internet
 
 Configuration recommandée :
 
-CPU 8 cœurs
-16 Go de RAM
-SSD
-100 Go d'espace disque libre
+- CPU 8 cœurs
+- 16 Go de RAM
+- SSD
+- 100 Go d'espace disque libre
 
 ### macOS
 
