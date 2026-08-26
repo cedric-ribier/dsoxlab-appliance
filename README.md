@@ -53,12 +53,13 @@ freshly patched rather than frozen at build time.
 
 ## Where to look
 
-| Document | What's in it |
-| --- | --- |
-| [`PLAN.md`](PLAN.md) | Architecture, decisions made and why, open questions |
-| [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Repository structure |
-| [`RELEASE.md`](RELEASE.md) | Build, validate, and publish, step by step |
-| [`packer/`](packer/) | The actual Packer definition, provisioning scripts, CI workflow |
+| Document | Audience | What's in it |
+| --- | --- | --- |
+| [`INSTALL.md`](INSTALL.md) | Learners — using the appliance | Download, import, first boot, troubleshooting |
+| [`RELEASE.md`](RELEASE.md) | Contributors — building the appliance | Build, validate, and publish, step by step |
+| [`PLAN.md`](PLAN.md) | Reviewers — evaluating the proposal | Architecture, decisions made and why, open questions |
+| [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Contributors | Repository structure |
+| [`packer/`](packer/) | Contributors | The actual Packer definition, provisioning scripts, CI workflow |
 
 ## License
 

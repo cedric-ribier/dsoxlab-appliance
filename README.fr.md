@@ -60,12 +60,13 @@ build.
 
 ## Où regarder
 
-| Document | Contenu |
-| --- | --- |
-| [`PLAN.md`](PLAN.md) | Architecture, décisions prises et pourquoi, questions ouvertes |
-| [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Structure du dépôt |
-| [`RELEASE.md`](RELEASE.md) | Build, validation et publication, pas à pas |
-| [`packer/`](packer/) | La définition Packer elle-même, scripts de provisioning, workflow CI |
+| Document | Public | Contenu |
+| --- | --- | --- |
+| [`INSTALL.md`](INSTALL.md) | Apprenants — utiliser l'appliance | Téléchargement, import, premier démarrage, dépannage |
+| [`RELEASE.md`](RELEASE.md) | Contributeurs — construire l'appliance | Build, validation et publication, pas à pas |
+| [`PLAN.md`](PLAN.md) | Relecteurs — évaluer la proposition | Architecture, décisions prises et pourquoi, questions ouvertes |
+| [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Contributeurs | Structure du dépôt |
+| [`packer/`](packer/) | Contributeurs | La définition Packer elle-même, scripts de provisioning, workflow CI |
 
 ## Licence
 
