@@ -12,7 +12,7 @@ LOG_TAG="dsoxlab-provider-setup"
 log() { logger -t "$LOG_TAG" "$1"; echo "[$LOG_TAG] $1"; }
 
 detect_nested_virt() {
-  if grep -qE "vmx|svm" /proc/cpuinfo; then
+  if grep -oE "vmx|svm" /proc/cpuinfo | head -1; then
     return 0
   fi
   return 1

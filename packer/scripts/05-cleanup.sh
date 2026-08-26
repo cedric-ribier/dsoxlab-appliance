@@ -12,8 +12,11 @@ rm -rf /var/lib/apt/lists/*
 mv /tmp/first-boot-provider-setup.sh /usr/local/sbin/dsoxlab-provider-setup.sh
 chmod +x /usr/local/sbin/dsoxlab-provider-setup.sh
 
-find /var/log -type f -exec truncate -s 0 {} \;
-rm -rf /tmp/* /var/tmp/*
+journalctl --rotate || true
+journalctl --vacuum-time=1s || true
+find /var/log -type f ! -path '/var/log/journal/*' -exec truncate -s 0 {} +
+find /tmp -mindepth 1 -delete
+find /var/tmp -mindepth 1 -delete
 
 truncate -s 0 /etc/machine-id
 rm -f /var/lib/dbus/machine-id
@@ -29,7 +32,8 @@ ConditionPathExists=!/etc/ssh/ssh_host_rsa_key
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/ssh-keygen -A
-ExecStartPost=/usr/bin/systemctl restart ssh.service
+ExecStartPost=/usr/bin/systemctl stop ssh.service
+ExecStartPost=/usr/bin/systemctl start ssh
 
 [Install]
 WantedBy=multi-user.target
@@ -65,10 +69,11 @@ EOF
 
   systemctl restart networking || true
 fi
-
-useradd -m -s /bin/bash user
-echo "user:MotDePasse" | chpasswd
-chage -d 0 user
+if ! id user >/dev/null 2>&1; then
+  useradd -m -s /bin/bash user
+  echo "user:MotDePasse" | chpasswd
+  chage -d 0 user
+fi
 
 usermod -aG sudo user
 getent group libvirt      >/dev/null 2>&1 && usermod -aG libvirt user || true
@@ -104,7 +109,7 @@ cat > /etc/systemd/system/dsoxlab-provider-setup.service <<'EOF'
 [Unit]
 Description=Installe les providers vm (KVM/libvirt, Incus) si la virtualisation imbriquée est disponible
 After=dsoxlab-first-boot-setup.service
-Requires=dsoxlab-first-boot-setup.service
+Wants=dsoxlab-first-boot-setup.service
 ConditionPathExists=/usr/local/sbin/dsoxlab-provider-setup.sh
 
 [Service]
