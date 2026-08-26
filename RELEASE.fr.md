@@ -147,7 +147,11 @@ Temps observé :
 ls -la output/dsoxlab-appliance-X.Y.Z/*.ova
 sha256sum -c output/dsoxlab-appliance-X.Y.Z/SHA256SUMS
 ```
+Variante windows pour le SHA256SUM
 
+```bash
+(cd /D/Documents/Github/dsoxlab-appliance/packer/output/dsoxlab-appliance-0.1.0 && sha256sum -c SHA256SUMS)
+```
 > Sur macOS, `sha256sum` n'est pas installé par défaut (l'userland BSD
 > utilise `shasum` à la place) — soit `brew install coreutils`, soit
 > remplacer `shasum -a 256 -c` à chaque `sha256sum -c` de ce document.
