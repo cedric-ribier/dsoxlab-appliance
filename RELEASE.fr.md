@@ -16,8 +16,8 @@ La procédure a été validée avec :
 |------------|------------|
 | Debian netinst | 12.15.0 |
 | VirtualBox | 7.2.14 - 7.2.16 |
-| Packer | 1.15.4 |
-| Git | 2.50.1 |
+| Packer | 1.15.4 - 1.16 |
+| Git | 2.50.1 - 2.51.0 |
 | VMware Fusion | 13.6.2 |
 | VMware Workstation | 26.0.025388281 |
 
@@ -29,17 +29,10 @@ Prérequis matériels
 
 Configuration minimale recommandée :
 
-- CPU 4 cœurs
-- 8 Go de RAM
-- 50 Go d'espace disque libre
-- Connexion Internet
-
-Configuration recommandée :
-
-- CPU 8 cœurs
-- 16 Go de RAM
-- SSD
-- 100 Go d'espace disque libre
+| Configuration | CPU | RAM | DISQUE | Internet |
+|:--:|:--:|:--:|:--:|:--:|
+|minimal|4 coeurs|8 Go|50 Go|✅|
+|recommandée|8 coeurs|16 Go|100 Go|✅|
 
 ### macOS
 
@@ -152,6 +145,8 @@ Variante windows pour le SHA256SUM
 ```bash
 (cd /D/Documents/Github/dsoxlab-appliance/packer/output/dsoxlab-appliance-0.1.0 && sha256sum -c SHA256SUMS)
 ```
+> Sous Windows (Git Bash), un chemin absolu explicite s'est avéré nécessaire — confirmé par un testeur externe, un simple `cd` relatif + `sha256sum -c` ne fonctionnait pas de façon fiable dans son environnement.
+
 > Sur macOS, `sha256sum` n'est pas installé par défaut (l'userland BSD
 > utilise `shasum` à la place) — soit `brew install coreutils`, soit
 > remplacer `shasum -a 256 -c` à chaque `sha256sum -c` de ce document.
