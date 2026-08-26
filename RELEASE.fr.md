@@ -8,11 +8,43 @@ nouveau build ; sauter la validation double-hyperviseur (étape 4) est
 exactement ce qui a laissé passer plusieurs bugs lors du développement,
 invisibles avec un seul hyperviseur testé.
 
+## Versions validées
+
+La procédure a été validée avec :
+
+| Composant | Version |
+|------------|------------|
+| Debian netinst | 12.15.0 |
+| VirtualBox | 7.2.14 - 7.2.16 |
+| Packer | 1.15.4 |
+| Git | 2.50.1 |
+| VMware Fusion | 13.6.2 |
+| VMware Workstation | 26.0.025388281 |
+
+D'autres versions peuvent fonctionner mais n'ont pas été vérifiées.
+
 ## 1. Prérequis
+
+Prérequis matériels
+
+Configuration minimale recommandée :
+
+CPU 4 cœurs
+8 Go de RAM
+50 Go d'espace disque libre
+Connexion Internet
+
+Configuration recommandée :
+
+CPU 8 cœurs
+16 Go de RAM
+SSD
+100 Go d'espace disque libre
 
 ### macOS
 
 ```bash
+brew install git
 brew install hashicorp/tap/packer
 brew install --cask virtualbox
 ```
@@ -27,13 +59,19 @@ Confidentialité et sécurité*.
 curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp.gpg
 echo "deb [signed-by=/usr/share/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 sudo apt update
-sudo apt install -y packer virtualbox
+sudo apt install -y packer virtualbox git
 ```
 
 Aucun conflit d'hyperviseur connu sur Linux — le module kernel de
 VirtualBox (`vboxdrv`) cohabite normalement avec KVM si les deux sont
 installés, tant qu'ils ne tentent pas de faire tourner une VM
 exactement au même moment sur le même CPU.
+
+Ajouter son utilisateur au groupe Virtualbox :
+
+```bash
+sudo usermod -aG vboxusers $USER
+```
 
 ### Windows
 
@@ -72,10 +110,16 @@ winget install Oracle.VirtualBox
 et [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) si
 `winget` n'est pas disponible.)
 
-## 2. Build
+## 2. Clonage du dépôt
 
 ```bash
-cd appliance/packer
+git clone https://github.com/cedric-ribier/dsoxlab-appliance.git
+```
+
+## 3. Build
+
+```bash
+cd dsoxlab-appliance/packer
 packer init .
 packer validate -var "image_version=X.Y.Z" -var "providers=none" .
 packer build -force -on-error=ask -var "image_version=X.Y.Z" -var "providers=none" . 2>&1 | tee build-X.Y.Z.log
@@ -91,7 +135,13 @@ Compter 15-25 minutes. Le build télécharge l'ISO netinst Debian au
 premier lancement (mis en cache ensuite) et exécute toute la chaîne de
 provisioning.
 
-## 3. Vérifier l'artefact avant de l'importer où que ce soit
+Temps observé :
+
+- SSD NVMe + 8 vCPU : ~15 min
+- SSD SATA + 4 vCPU : ~25 min
+- HDD : non testé
+
+## 4. Vérifier l'artefact avant de l'importer où que ce soit
 
 ```bash
 ls -la output/dsoxlab-appliance-X.Y.Z/*.ova
@@ -107,7 +157,7 @@ sha256sum -c output/dsoxlab-appliance-X.Y.Z/SHA256SUMS
 Confirmer que la taille est sous 2 Gio (`2147483648` octets) — limite
 stricte par fichier des Releases GitHub.
 
-## 4. Valider sur les deux hyperviseurs — n'en sauter aucun
+## 5. Valider sur les deux hyperviseurs — n'en sauter aucun
 
 C'est l'étape qui attrape réellement les bugs spécifiques à un
 hyperviseur (nommage d'interface réseau, détection nested-virt) qu'un
@@ -123,16 +173,19 @@ mot de passe forcé immédiatement. Confirmer :
 ```bash
 cat /etc/default/keyboard        # XKBLAYOUT="fr" (ou la locale preseedée)
 ip a                             # l'interface doit avoir une vraie adresse DHCP
+ping -c 4 deb.debian.org        # Connexion et résolution DNS
 dsoxlab --version
 dsoxlab doctor
+ls /etc/ssh/ssh_host_*           # Les clés doivent avoir été régénérées.
+systemctl status ssh --no-pager  # enable et running
 ```
 
-### VMware Fusion
+### VMware Fusion/Workstation
 Transférer la même `.ova` (pas de build séparé). Avant le premier
 démarrage, dans les réglages de la VM (VM éteinte) : activer *"Enable
 hypervisor applications in this virtual machine"* si on teste le
 chemin providers en virtualisation imbriquée — étape manuelle que
-VMware Fusion ne fait pas par défaut à l'import, et le script
+VMware Fusion/Workstation ne fait pas par défaut à l'import, et le script
 d'installation différée ne fait correctement rien sans ça (retente à
 chaque démarrage suivant si activé plus tard, pas besoin de rebuild).
 
@@ -143,7 +196,37 @@ sudo journalctl -u dsoxlab-provider-setup.service --no-pager
 dpkg -l | grep -E "incus|qemu-kvm|libvirt"
 ```
 
-## 5. Tag et publication
+## 6. Tag et publication
+
+### Vérification de l'état Git
+
+Avant toute release :
+
+```bash
+git status
+```
+Le dépôt doit être propre :
+
+```text
+nothing to commit, working tree clean
+``` 
+
+Les fichiers de logs générés durant les builds doivent rester locaux et
+ne jamais être versionnés.
+
+Exemple:
+
+```bash
+git status
+```
+Ne doit faire apparaître:
+
+```text
+build-*.log
+``` 
+
+avant un tag de release.
+
 
 ```bash
 git add .
@@ -161,13 +244,29 @@ gh release create vX.Y.Z \
   --notes "..."
 ```
 
-## 6. Vérification post-publication
+## 7. Vérification post-publication
 
 ```bash
 gh release download vX.Y.Z -p "SHA256SUMS"
 gh release download vX.Y.Z -p "*.ova"
 sha256sum -c SHA256SUMS
 ```
+Importer l'OVA téléchargée une seconde fois afin de vérifier que
+l'artefact publié est bien celui validé localement.
+
+## Critères d'acceptation d'une release
+
+Une release est considérée comme valide si :
+
+- le build Packer se termine sans erreur ;
+- les sommes SHA256 sont correctes ;
+- l'OVA est importable dans VirtualBox ;
+- l'OVA est importable dans VMware ;
+- le clavier est configuré correctement ;
+- le réseau obtient une adresse DHCP ;
+- l'accès Internet fonctionne ;
+- les clés SSH sont régénérées ;
+- `dsoxlab doctor` ne remonte aucune anomalie bloquante.
 
 ## Limites connues à ce stade
 

@@ -7,11 +7,43 @@ questions). Follow this end to end for any new build; skipping the
 dual-hypervisor validation (step 4) is how several bugs made it past
 a single-hypervisor test during development.
 
+Validated Versions
+
+This procedure has been validated with:
+
+| Composant | Version |
+|------------|------------|
+| Debian netinst | 12.15.0 |
+| VirtualBox | 7.2.14 - 7.2.16 |
+| Packer | 1.15.4 |
+| Git | 2.50.1 |
+| VMware Fusion | 13.6.2 |
+| VMware Workstation | 26.0.025388281 |
+
+Other versions may work but have not been verified.
+
 ## 1. Prerequisites
+
+Hardware Requirements
+
+Minimum recommended configuration:
+
+- 4 CPU cores
+- 8 GB RAM
+- 50 GB free disk space
+- Internet connection
+
+Recommended configuration:
+
+- 8 CPU cores
+- 16 GB RAM
+- SSD storage
+- 100 GB free disk space
 
 ### macOS
 
 ```bash
+brew install git
 brew install hashicorp/tap/packer
 brew install --cask virtualbox
 ```
@@ -32,6 +64,13 @@ No known hypervisor conflict on Linux — VirtualBox's kernel module
 (`vboxdrv`) coexists normally with KVM if both happen to be installed,
 as long as they're not both trying to run a VM at the exact same time
 on the same CPU.
+
+Add your user to the VirtualBox group :
+
+```bash
+sudo usermod -aG vboxusers $USER
+```
+Log out and back in afterward.
 
 ### Windows
 
@@ -68,7 +107,13 @@ winget install Oracle.VirtualBox
 and [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) if
 `winget` isn't available.)
 
-## 2. Build
+## 2. Clone the Repository
+
+```bash
+git clone https://github.com/cedric-ribier/dsoxlab-appliance.git
+```
+
+## 3. Build
 
 ```bash
 cd appliance/packer
@@ -86,7 +131,13 @@ that code path but not the release default.
 Expect 15–25 minutes. The build downloads Debian's netinst ISO on first
 run (cached afterward) and runs the full provisioning chain.
 
-## 3. Check the artifact before importing anywhere
+Expected build time:
+
+- NVMe SSD + 8 vCPU: approximately 15 minutes
+- SATA SSD + 4 vCPU: approximately 25 minutes
+- HDD: untested
+
+## 4. Check the artifact before importing anywhere
 
 ```bash
 ls -la output/dsoxlab-appliance-X.Y.Z/*.ova
@@ -101,7 +152,7 @@ sha256sum -c output/dsoxlab-appliance-X.Y.Z/SHA256SUMS
 Confirm the size is under 2 GiB (`2147483648` bytes) — GitHub's hard
 per-file Release limit.
 
-## 4. Validate on both hypervisors — do not skip either
+## 5. Validate on both hypervisors — do not skip either
 
 This is the step that actually catches hypervisor-specific bugs
 (network interface naming, nested-virt detection) that a single-target
@@ -117,8 +168,11 @@ forced immediately. Confirm:
 ```bash
 cat /etc/default/keyboard        # XKBLAYOUT="fr" (or whichever locale was preseeded)
 ip a                             # interface should have a real DHCP-assigned address
+ping -c 4 deb.debian.org
 dsoxlab --version
 dsoxlab doctor
+ls /etc/ssh/ssh_host_*           # Host keys must have been regenerated
+systemctl status ssh --no-pager  # Must be enabled and running
 ```
 
 ### VMware Fusion
@@ -136,7 +190,30 @@ sudo journalctl -u dsoxlab-provider-setup.service --no-pager
 dpkg -l | grep -E "incus|qemu-kvm|libvirt"
 ```
 
-## 5. Tag and publish
+## 6. Tag and publish
+
+### Verify Git Status
+
+Before creating a release:
+
+```bash
+git status
+```
+The repository must be clean:
+
+```texte
+nothing to commit, working tree clean
+```
+Build logs must remain local and must never be committed.
+
+Example:
+```bash
+git status
+```
+must not show anything except optionally untracked local files such as:
+```texte
+build-*.log
+```
 
 ```bash
 git add .
@@ -154,13 +231,28 @@ gh release create vX.Y.Z \
   --notes "..."
 ```
 
-## 6. Post-publish verification
+## 7. Post-publish verification
 
 ```bash
 gh release download vX.Y.Z -p "SHA256SUMS"
 gh release download vX.Y.Z -p "*.ova"
 sha256sum -c SHA256SUMS
 ```
+Import the downloaded OVA a second time to verify that the published artifact is exactly the one validated locally.
+
+## Release Acceptance Criteria
+
+A release is considered valid if:
+
+- the Packer build completes successfully;
+- SHA256 checksums are valid;
+- the OVA imports successfully into VirtualBox;
+- the OVA imports successfully into VMware;
+- keyboard layout is configured correctly;
+- networking obtains a DHCP address;
+- Internet access works;
+- SSH host keys are regenerated;
+- dsoxlab doctor reports no blocking issues.
 
 ## Known limitations at this stage
 
