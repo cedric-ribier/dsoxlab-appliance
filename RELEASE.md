@@ -143,7 +143,10 @@ Expected build time:
 ls -la output/dsoxlab-appliance-X.Y.Z/*.ova
 sha256sum -c output/dsoxlab-appliance-X.Y.Z/SHA256SUMS
 ```
-
+SHA256SUM for Windows
+```bash
+(cd /D/Documents/Github/dsoxlab-appliance/packer/output/dsoxlab-appliance-0.1.0 && sha256sum -c SHA256SUMS)
+```
 > On macOS, `sha256sum` isn't installed by default (BSD userland uses
 > `shasum` instead) — either `brew install coreutils`, or substitute
 > `shasum -a 256 -c` for every `sha256sum -c` in this document. Native
