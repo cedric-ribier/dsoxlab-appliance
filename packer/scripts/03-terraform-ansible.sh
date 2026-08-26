@@ -22,8 +22,8 @@ EOF
 mise install
 "$MISE_DATA_DIR/shims/terraform" version
 
-export UV_TOOL_DIR=/opt/dsoxlab-appliance/uv-tools
-export UV_TOOL_BIN_DIR=/opt/dsoxlab-appliance/bin
+
+
 
 uv tool install ansible-core
 uv tool install ansible-runner
@@ -35,6 +35,8 @@ chmod -R a+rX /opt/dsoxlab-appliance
 
 cat > /etc/profile.d/dsoxlab-appliance-path.sh <<'EOF'
 export PATH="/opt/dsoxlab-appliance/bin:/opt/dsoxlab-appliance/mise/shims:$PATH"
+export UV_TOOL_DIR=/opt/dsoxlab-appliance/uv-tools
+export UV_TOOL_BIN_DIR=/opt/dsoxlab-appliance/bin
 EOF
 chmod +x /etc/profile.d/dsoxlab-appliance-path.sh
 
