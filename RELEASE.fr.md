@@ -10,6 +10,8 @@ invisibles avec un seul hyperviseur testé.
 
 ## 1. Prérequis
 
+### macOS
+
 ```bash
 brew install hashicorp/tap/packer
 brew install --cask virtualbox
@@ -18,6 +20,57 @@ brew install --cask virtualbox
 macOS bloquera probablement l'extension kernel de VirtualBox à la
 première installation — autoriser une fois via *Réglages Système →
 Confidentialité et sécurité*.
+
+### Linux (Debian/Ubuntu)
+
+```bash
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update
+sudo apt install -y packer virtualbox
+```
+
+Aucun conflit d'hyperviseur connu sur Linux — le module kernel de
+VirtualBox (`vboxdrv`) cohabite normalement avec KVM si les deux sont
+installés, tant qu'ils ne tentent pas de faire tourner une VM
+exactement au même moment sur le même CPU.
+
+### Windows
+
+> **Conflit Hyper-V/WSL2 — à lire avant d'installer quoi que ce soit.**
+> VirtualBox et la virtualisation basée sur Hyper-V (qui inclut WSL2,
+> et souvent la sécurité basée sur la virtualisation / l'intégrité de
+> la mémoire de Windows 11, parfois activée par défaut) se disputent
+> l'accès exclusif à VT-x. Faire tourner les deux sur la même machine
+> fait retomber VirtualBox dans un mode de compatibilité lent et
+> instable (la communauté rapporte des plantages fréquents même sur
+> des versions récentes de VirtualBox) — pas un cas limite rare, un
+> vrai conflit d'architecture.
+>
+> **Avant de builder sous Windows** : désactiver Hyper-V, WSL2, et la
+> sécurité basée sur la virtualisation (*Activer ou désactiver des
+> fonctionnalités Windows* → décocher *Hyper-V*, *Plateforme de
+> machine virtuelle*, *Sous-système Windows pour Linux* ; vérifier
+> aussi *Sécurité Windows → Sécurité de l'appareil → Isolation du
+> noyau* et désactiver *Intégrité de la mémoire* si présent), puis
+> redémarrer.
+
+Installer [Git for Windows](https://git-scm.com/download/win) (fournit
+**Git Bash** — un vrai shell bash sans dépendance à Hyper-V,
+contrairement à WSL2) et exécuter le reste de cette procédure depuis
+Git Bash, pour que les mêmes commandes que macOS/Linux s'appliquent
+tout du long dans ce document.
+
+```bash
+# Dans Git Bash, après avoir installé Git for Windows :
+winget install HashiCorp.Packer
+winget install Oracle.VirtualBox
+```
+
+(ou télécharger les deux installeurs manuellement depuis
+[developer.hashicorp.com/packer](https://developer.hashicorp.com/packer/install)
+et [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) si
+`winget` n'est pas disponible.)
 
 ## 2. Build
 
@@ -44,6 +97,12 @@ provisioning.
 ls -la output/dsoxlab-appliance-X.Y.Z/*.ova
 sha256sum -c output/dsoxlab-appliance-X.Y.Z/SHA256SUMS
 ```
+
+> Sur macOS, `sha256sum` n'est pas installé par défaut (l'userland BSD
+> utilise `shasum` à la place) — soit `brew install coreutils`, soit
+> remplacer `shasum -a 256 -c` à chaque `sha256sum -c` de ce document.
+> Natif sous Linux et dans Git Bash sous Windows, pas de substitution
+> nécessaire là.
 
 Confirmer que la taille est sous 2 Gio (`2147483648` octets) — limite
 stricte par fichier des Releases GitHub.
