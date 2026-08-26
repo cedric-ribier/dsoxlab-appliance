@@ -1,4 +1,4 @@
-name: Build & Release dsoxlab-runtime
+name: Build & Release dsoxlab-appliance
 
 on:
   # Cadence mensuelle — voir PLAN.md §1.5 : build tenté chaque mois,
@@ -53,15 +53,15 @@ jobs:
 
       - name: packer validate
         working-directory: packer
-        run: packer validate -var "image_version=${{ steps.version.outputs.version }}" dsoxlab-runtime.pkr.hcl
+        run: packer validate -var "image_version=${{ steps.version.outputs.version }}" dsoxlab-appliance.pkr.hcl
 
       - name: packer build
         working-directory: packer
-        run: packer build -var "image_version=${{ steps.version.outputs.version }}" dsoxlab-runtime.pkr.hcl
+        run: packer build -var "image_version=${{ steps.version.outputs.version }}" dsoxlab-appliance.pkr.hcl
 
       - name: Vérifier la taille de l'OVA (limite 2 Go GitHub Release)
         id: size_check
-        working-directory: packer/output/dsoxlab-runtime-${{ steps.version.outputs.version }}
+        working-directory: packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}
         run: |
           SIZE_BYTES=$(stat -c%s *.ova)
           SIZE_MB=$((SIZE_BYTES / 1024 / 1024))
@@ -79,7 +79,7 @@ jobs:
         if: github.event_name == 'schedule'
         run: |
           LATEST_SHA=$(gh release view --json body -q '.body' 2>/dev/null | grep -oP 'content-hash: \K\w+' || echo "none")
-          CURRENT_SHA=$(sha256sum packer/output/dsoxlab-runtime-${{ steps.version.outputs.version }}/manifest.json | cut -d' ' -f1)
+          CURRENT_SHA=$(sha256sum packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/manifest.json | cut -d' ' -f1)
           echo "current_sha=$CURRENT_SHA" >> "$GITHUB_OUTPUT"
           if [ "$LATEST_SHA" == "$CURRENT_SHA" ] && [ "${{ github.event.inputs.force_publish }}" != "true" ]; then
             echo "publish=false" >> "$GITHUB_OUTPUT"
@@ -94,7 +94,7 @@ jobs:
         if: github.event_name == 'push' || steps.diff_check.outputs.publish == 'true'
         uses: actions/attest-build-provenance@v1
         with:
-          subject-path: 'packer/output/dsoxlab-runtime-${{ steps.version.outputs.version }}/*.ova'
+          subject-path: 'packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/*.ova'
 
       - name: Publier sur GitHub Releases
         if: github.event_name == 'push' || steps.diff_check.outputs.publish == 'true'
@@ -105,5 +105,5 @@ jobs:
             content-hash: ${{ steps.diff_check.outputs.current_sha }}
             Taille OVA : ${{ steps.size_check.outputs.size_mb }} Mo
           files: |
-            packer/output/dsoxlab-runtime-${{ steps.version.outputs.version }}/*.ova
-            packer/output/dsoxlab-runtime-${{ steps.version.outputs.version }}/SHA256SUMS
+            packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/*.ova
+            packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/SHA256SUMS

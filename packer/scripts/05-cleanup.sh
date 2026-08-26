@@ -76,6 +76,8 @@ getent group kvm          >/dev/null 2>&1 && usermod -aG kvm user || true
 getent group incus         >/dev/null 2>&1 && usermod -aG incus user || true
 getent group incus-admin  >/dev/null 2>&1 && usermod -aG incus-admin user || true
 
+chown -R user:user /opt/dsoxlab-appliance
+
 rm -f /etc/sudoers.d/packer-nopasswd
 userdel -r packer 2>/dev/null || true
 

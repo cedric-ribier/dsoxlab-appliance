@@ -8,10 +8,10 @@ sudo extrepo enable mise
 sudo apt-get update
 sudo apt-get install -y mise
 
-export MISE_DATA_DIR=/opt/dsoxlab-runtime/mise
+export MISE_DATA_DIR=/opt/dsoxlab-appliance/mise
 mkdir -p "$MISE_DATA_DIR"
 
-export PATH="/opt/dsoxlab-runtime/bin:$PATH"
+export PATH="/opt/dsoxlab-appliance/bin:$PATH"
 
 mkdir -p /etc/mise
 cat > /etc/mise/config.toml <<'EOF'
@@ -22,8 +22,8 @@ EOF
 mise install
 "$MISE_DATA_DIR/shims/terraform" version
 
-export UV_TOOL_DIR=/opt/dsoxlab-runtime/uv-tools
-export UV_TOOL_BIN_DIR=/opt/dsoxlab-runtime/bin
+export UV_TOOL_DIR=/opt/dsoxlab-appliance/uv-tools
+export UV_TOOL_BIN_DIR=/opt/dsoxlab-appliance/bin
 
 uv tool install ansible-core
 uv tool install ansible-runner
@@ -31,11 +31,11 @@ uv tool install ansible-runner
 "$UV_TOOL_BIN_DIR/ansible" --version
 "$UV_TOOL_BIN_DIR/ansible-runner" --version
 
-chmod -R a+rX /opt/dsoxlab-runtime
+chmod -R a+rX /opt/dsoxlab-appliance
 
-cat > /etc/profile.d/dsoxlab-runtime-path.sh <<'EOF'
-export PATH="/opt/dsoxlab-runtime/bin:/opt/dsoxlab-runtime/mise/shims:$PATH"
+cat > /etc/profile.d/dsoxlab-appliance-path.sh <<'EOF'
+export PATH="/opt/dsoxlab-appliance/bin:/opt/dsoxlab-appliance/mise/shims:$PATH"
 EOF
-chmod +x /etc/profile.d/dsoxlab-runtime-path.sh
+chmod +x /etc/profile.d/dsoxlab-appliance-path.sh
 
 echo "==> 03-terraform-ansible: terminé"
