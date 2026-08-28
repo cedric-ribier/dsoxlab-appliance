@@ -1,0 +1,83 @@
+
+  ██████╗ ██╗     ██╗   ██╗ ███╗   ███╗██████╗ ███████╗██████╗ 
+  ██╔══██╗██║     ██║   ██║ ████╗ ████║██╔══██╗██╔════╝██╔══██╗
+  ██████╔╝██║     ██║   ██║ ██╔████╔██║██████╔╝█████╗  ██████╔╝
+  ██╔═══╝ ██║     ██║   ██║ ██║╚██╔╝██║██╔══██╗██╔══╝  ██╔══██╗
+  ██║     ███████╗╚██████╔╝ ██║ ╚═╝ ██║██████╔╝███████╗██║  ██║
+  ╚═╝     ╚══════╝ ╚═════╝  ╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝
+  CI/CD Compliance Scanner for GitLab & GitHub Actions  v0.4.46
+  Join our community: https://getplumber.io/discord
+
+
+  Project    cedric-ribier/dsoxlab-appliance
+  Platform   GitHub
+  Config     .plumber.yaml
+  CI config  local file
+
+[2m────────────────────[0m
+[32m✓[0m [1m[32mPassed Controls (21)[0m
+[2m────────────────────[0m
+
+  [32m✓[0m Container images must not use forbidden tags (pinned by digest)
+  [32m✓[0m Third-party actions must be pinned by commit SHA
+  [32m✓[0m Actions must come from authorized sources
+  [32m✓[0m Branch must be protected
+  [32m✓[0m Security jobs must not be weakened
+  [32m✓[0m Workflows must not use Docker-in-Docker
+  [32m✓[0m Pipeline must not execute unverified scripts
+  [32m✓[0m Reusable workflows must not inherit secrets
+  [32m✓[0m Workflows must not expose all secrets at once
+  [32m✓[0m Workflows must not inject user input in scripts
+  [32m✓[0m Workflows must not write untrusted content to $GITHUB_ENV
+  [32m✓[0m Workflows must not use dangerous triggers
+  [32m✓[0m Workflows must declare permissions
+  [32m✓[0m Workflow must not grant write-all permissions
+  [32m✓[0m Actions must not use ambiguous tag/branch refs
+  [32m✓[0m Actions must not reference archived repositories
+  [32m✓[0m Actions must pin commits that exist upstream
+  [32m✓[0m Actions must not carry known CVEs
+  [32m✓[0m Actions must not execute mutable remote code
+  [32m✓[0m Release workflows must not restore an untrusted cache
+  [32m✓[0m Pipeline must not enable debug trace
+
+[2m────────────────────[0m
+[2m•[0m [1m[2mSkipped Controls (1)[0m
+[2m────────────────────[0m
+
+  [2m•[0m Workflows must include required actions [2m(disabled in configuration)[0m
+
+[2m────────────────────[0m
+[1mSummary[0m
+[2m────────────────────[0m
+
+  Status: [1m[32mPASSED ✓[0m [2m(score A — 100.0/100 pts, required ≥ 100 pts)[0m
+
+  Controls
+  (none with open issues)
+
+
+ ──────────────────────────────────────────────────────────────────────────────
+ Plumber Score
+
+  █████╗                                                     
+ ██╔══██╗  100 / 100 pts                                     
+ ███████║  ████████████████████████████                      
+ ██╔══██║  Excellent — very low risk, clean pipeline         
+ ██║  ██║                                                    
+ ╚═╝  ╚═╝  🔴 Critical 0   🟠 High 0   🟡 Medium 0   🔵 Low 0
+
+ ──────────────────────────────────────────────────────────────────────────────
+
+[2m────────────────────[0m
+[1mPoints breakdown (beta)[0m
+[2m────────────────────[0m
+
+  [2mProfile:[0m scoring-v3
+
+  Base points: [32m100[0m
+  Raw points:  100.0
+  [1mFinal points:[0m [1m[32m100.0 / 100[0m
+  [1mScore:[0m       [32m[1mA[0m
+
+  [2mLetter score (from points):[0m  [32mA[0m >=90  [2m│[0m  [92mB[0m >=71  [2m│[0m  [33mC[0m >=51  [2m│[0m  [38;5;208mD[0m >=31  [2m│[0m  [31mE[0m <31
+
