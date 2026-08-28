@@ -142,6 +142,36 @@ content; recompressing added manifest/repackaging overhead without
 reclaiming anything, since `rm`-deleted blocks aren't zeroed unless a
 dedicated pass does it before export).
 
+### CI security posture
+Scanned with [Plumber](https://github.com/getplumber/plumber) (open
+source CI/CD compliance scanner) — score **A, 100/100**, 21/21
+controls passing, zero findings at any severity. This check is
+independent of the self-hosted runner question below (Plumber
+validates the workflow file and repository settings, not the actual
+build execution) — it can, and did, run before a runner exists.
+
+Three findings fixed to reach this score, all in
+`.github/workflows/build-release.yml`:
+- Branch `main` had no protection rule — added (blocks force-push and
+  deletion; no required review, appropriate for a single-maintainer
+  repo at this stage).
+- The publish step used a third-party action
+  (`softprops/action-gh-release@v2`), unpinned by commit SHA and
+  outside the authorized-source allowlist. Replaced with a direct
+  `gh release create` call — removes a third-party dependency
+  entirely rather than just pinning it, and matches the same command
+  already used in the manual procedure documented in `RELEASE.md`.
+
+Report committed at `plumber-report.txt`/`plumber-findings.csv`, for
+anyone reviewing this proposal to verify independently rather than
+take the score on faith.
+
+**Not yet done**: wiring Plumber into the CI workflow itself as a
+gating check (fail the build below a score threshold) — currently a
+manual, occasional re-run. Worth adding once the runner (below) is
+settled, so score regressions get caught automatically rather than
+relying on remembering to re-scan.
+
 ## 6. Open questions
 
 Points that need Stéphane's input before this could move toward being

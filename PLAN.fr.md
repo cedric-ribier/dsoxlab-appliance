@@ -152,6 +152,39 @@ recompresser a ajouté de l'overhead de manifeste/réempaquetage sans
 rien récupérer, puisque les blocs supprimés par `rm` ne sont pas mis à
 zéro sauf passage dédié avant export).
 
+### Posture de sécurité CI
+Scannée avec [Plumber](https://github.com/getplumber/plumber) (scanner
+de conformité CI/CD open source) — score **A, 100/100**, 21/21
+contrôles réussis, aucun constat à quelque niveau de sévérité que ce
+soit. Ce contrôle est indépendant de la question du runner self-hosted
+ci-dessous (Plumber valide le fichier de workflow et les réglages du
+dépôt, pas l'exécution réelle du build) — il peut tourner, et a
+tourné, avant même qu'un runner existe.
+
+Trois constats corrigés pour atteindre ce score, tous dans
+`.github/workflows/build-release.yml` :
+- La branche `main` n'avait aucune règle de protection — ajoutée
+  (bloque force-push et suppression ; pas de revue obligatoire,
+  approprié pour un dépôt à mainteneur unique à ce stade).
+- L'étape de publication utilisait une action tierce
+  (`softprops/action-gh-release@v2`), non épinglée par SHA de commit
+  et hors de la liste d'origines autorisées. Remplacée par un appel
+  direct à `gh release create` — retire complètement une dépendance
+  tierce plutôt que de simplement l'épingler, et correspond à la même
+  commande déjà utilisée dans la procédure manuelle documentée dans
+  `RELEASE.md`.
+
+Rapport committé sous `plumber-report.txt`/`plumber-findings.csv`,
+pour que quiconque relit cette proposition puisse vérifier de façon
+indépendante plutôt que de croire le score sur parole.
+
+**Pas encore fait** : intégrer Plumber directement dans le workflow CI
+comme contrôle bloquant (échec du build sous un seuil de score) —
+actuellement un re-scan manuel occasionnel. À ajouter une fois le
+runner (ci-dessous) réglé, pour que les régressions de score soient
+attrapées automatiquement plutôt que de dépendre de se souvenir de
+relancer le scan.
+
 ## 6. Questions ouvertes
 
 Points nécessitant l'avis de Stéphane avant toute fusion éventuelle,
