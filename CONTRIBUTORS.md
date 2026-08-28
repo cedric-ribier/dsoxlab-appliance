@@ -17,7 +17,7 @@ couverte, ou aidé à diagnostiquer quelque chose, ta place est ici.*
 | Name / Handle | Contribution | Date |
 | --- | --- | --- |
 | [Cédric Ribier](https://github.com/cedric-ribier) | Author — build, provisioning scripts, documentation | 2026-08 |
-
+| [Stéphane Morin](https://github.com/PapyPoc) | Tested the build and installed the providers on Windows 11 / VirtualBox — identified and helped diagnose the CRL end-of-line bug | 2026-08 |
 ---
 
 ## How to add yourself / Comment s'ajouter
