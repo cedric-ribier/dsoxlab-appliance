@@ -7,31 +7,20 @@ questions). Follow this end to end for any new build; skipping the
 dual-hypervisor validation (step 4) is how several bugs made it past
 a single-hypervisor test during development.
 
-Validated Versions
-
-This procedure has been validated with:
-
-| Composant | Debian netinst | VirtualBox | Packer | Git | VMware Fusion | VMware Workstation |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Version(s) | 12.15.0 | 7.2.14 - 7.2.16 | 1.15.4 - 1.16 | 2.50.1 - 2.51.0 | 13.6.2 | 26.0.0 (25388281) |
-
-Other versions may work but have not been verified.
-
 ## 1. Prerequisites
 
-Hardware Requirements
-
-Minimum recommended configuration:
-
-| Configuration | CPU | RAM | DISQUE | Internet |
-|:--:|:--:|:--:|:--:|:--:|
-|minimal|4 coeurs|8 Go|50 Go|✅|
-|recommandée|8 coeurs|16 Go|100 Go|✅|
+> **If this is the self-hosted CI runner** (not a one-off local build):
+> install Packer and VirtualBox once, at a specific pinned version, and
+> update deliberately rather than letting the workflow reinstall on
+> every run. The CI workflow only *verifies* both are present — it
+> does not install or upgrade them, on purpose (see `PLAN.md`: an
+> earlier version did auto-install "latest" on every run, which broke
+> build reproducibility and widened the attack surface for no benefit
+> on a persistent, non-ephemeral runner).
 
 ### macOS
 
 ```bash
-brew install git
 brew install hashicorp/tap/packer
 brew install --cask virtualbox
 ```
@@ -52,13 +41,6 @@ No known hypervisor conflict on Linux — VirtualBox's kernel module
 (`vboxdrv`) coexists normally with KVM if both happen to be installed,
 as long as they're not both trying to run a VM at the exact same time
 on the same CPU.
-
-Add your user to the VirtualBox group :
-
-```bash
-sudo usermod -aG vboxusers $USER
-```
-Log out and back in afterward.
 
 ### Windows
 
@@ -95,13 +77,7 @@ winget install Oracle.VirtualBox
 and [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) if
 `winget` isn't available.)
 
-## 2. Clone the Repository
-
-```bash
-git clone https://github.com/cedric-ribier/dsoxlab-appliance.git
-```
-
-## 3. Build
+## 2. Build
 
 ```bash
 cd appliance/packer
@@ -119,23 +95,12 @@ that code path but not the release default.
 Expect 15–25 minutes. The build downloads Debian's netinst ISO on first
 run (cached afterward) and runs the full provisioning chain.
 
-Expected build time:
-
-- NVMe SSD + 8 vCPU: approximately 15 minutes
-- SATA SSD + 4 vCPU: approximately 25 minutes
-- HDD: untested
-
-## 4. Check the artifact before importing anywhere
+## 3. Check the artifact before importing anywhere
 
 ```bash
 ls -la output/dsoxlab-appliance-X.Y.Z/*.ova
 sha256sum -c output/dsoxlab-appliance-X.Y.Z/SHA256SUMS
 ```
-SHA256SUM for Windows
-```bash
-(cd /D/Documents/Github/dsoxlab-appliance/packer/output/dsoxlab-appliance-X.Y.Z && sha256sum -c SHA256SUMS)
-```
-> On Windows (Git Bash), an explicit absolute path turned out to be necessary — confirmed by an external tester; a plain relative `cd` + `sha256sum -c` wasn't reliable in their environment.
 
 > On macOS, `sha256sum` isn't installed by default (BSD userland uses
 > `shasum` instead) — either `brew install coreutils`, or substitute
@@ -145,7 +110,7 @@ SHA256SUM for Windows
 Confirm the size is under 2 GiB (`2147483648` bytes) — GitHub's hard
 per-file Release limit.
 
-## 5. Validate on both hypervisors — do not skip either
+## 4. Validate on both hypervisors — do not skip either
 
 This is the step that actually catches hypervisor-specific bugs
 (network interface naming, nested-virt detection) that a single-target
@@ -161,11 +126,8 @@ forced immediately. Confirm:
 ```bash
 cat /etc/default/keyboard        # XKBLAYOUT="fr" (or whichever locale was preseeded)
 ip a                             # interface should have a real DHCP-assigned address
-ping -c 4 deb.debian.org
 dsoxlab --version
 dsoxlab doctor
-ls /etc/ssh/ssh_host_*           # Host keys must have been regenerated
-systemctl status ssh --no-pager  # Must be enabled and running
 ```
 
 ### VMware Fusion
@@ -183,30 +145,7 @@ sudo journalctl -u dsoxlab-provider-setup.service --no-pager
 dpkg -l | grep -E "incus|qemu-kvm|libvirt"
 ```
 
-## 6. Tag and publish
-
-### Verify Git Status
-
-Before creating a release:
-
-```bash
-git status
-```
-The repository must be clean:
-
-```texte
-nothing to commit, working tree clean
-```
-Build logs must remain local and must never be committed.
-
-Example:
-```bash
-git status
-```
-must not show anything except optionally untracked local files such as:
-```texte
-build-*.log
-```
+## 5. Tag and publish
 
 ```bash
 git add .
@@ -224,28 +163,13 @@ gh release create vX.Y.Z \
   --notes "..."
 ```
 
-## 7. Post-publish verification
+## 6. Post-publish verification
 
 ```bash
 gh release download vX.Y.Z -p "SHA256SUMS"
 gh release download vX.Y.Z -p "*.ova"
 sha256sum -c SHA256SUMS
 ```
-Import the downloaded OVA a second time to verify that the published artifact is exactly the one validated locally.
-
-## Release Acceptance Criteria
-
-A release is considered valid if:
-
-- the Packer build completes successfully;
-- SHA256 checksums are valid;
-- the OVA imports successfully into VirtualBox;
-- the OVA imports successfully into VMware;
-- keyboard layout is configured correctly;
-- networking obtains a DHCP address;
-- Internet access works;
-- SSH host keys are regenerated;
-- dsoxlab doctor reports no blocking issues.
 
 ## Known limitations at this stage
 

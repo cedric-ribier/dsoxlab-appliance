@@ -30,12 +30,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Installer Packer
+      - name: Vérifier que Packer et VirtualBox sont installés
         run: |
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp.gpg
-          echo "deb [signed-by=/usr/share/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-          sudo apt-get update
-          sudo apt-get install -y packer virtualbox
+          # Le runner self-hosted doit avoir Packer et VirtualBox déjà
+          # installés à une version précise, choisie et mise à jour
+          # délibérément par la personne qui l'administre — pas
+          # réinstallés/mis à jour silencieusement à chaque run CI.
+          # Un `apt-get install` sans version épinglée à chaque
+          # exécution cassait la reproductibilité des builds (chaque
+          # run pouvait utiliser une version différente de Packer selon
+          # la date) et élargissait inutilement la surface d'attaque
+          # (confiance aveugle au dépôt HashiCorp à chaque exécution,
+          # sur un runner persistant qui n'a besoin d'installer qu'une
+          # seule fois). Voir PLAN.md, questions ouvertes.
+          command -v packer >/dev/null 2>&1 || { echo "::error::packer introuvable sur ce runner — à installer manuellement, voir RELEASE.md"; exit 1; }
+          command -v VBoxManage >/dev/null 2>&1 || { echo "::error::VBoxManage introuvable sur ce runner — VirtualBox à installer manuellement, voir RELEASE.md"; exit 1; }
+          echo "Packer : $(packer version)"
+          echo "VirtualBox : $(VBoxManage --version)"
 
       - name: Déterminer la version
         id: version
