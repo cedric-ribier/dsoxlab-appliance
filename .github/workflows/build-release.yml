@@ -30,25 +30,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Vérifier que Packer et VirtualBox sont installés
+      - name: Vérifier que Packer, VirtualBox, gh et plumber sont installés
         run: |
-          # Le runner self-hosted doit avoir Packer et VirtualBox déjà
-          # installés à une version précise, choisie et mise à jour
-          # délibérément par la personne qui l'administre — pas
-          # réinstallés/mis à jour silencieusement à chaque run CI.
-          # Un `apt-get install` sans version épinglée à chaque
-          # exécution cassait la reproductibilité des builds (chaque
-          # run pouvait utiliser une version différente de Packer selon
-          # la date) et élargissait inutilement la surface d'attaque
-          # (confiance aveugle au dépôt HashiCorp à chaque exécution,
-          # sur un runner persistant qui n'a besoin d'installer qu'une
-          # seule fois). Voir PLAN.md, questions ouvertes.
+          # Le runner self-hosted doit avoir ces outils déjà installés
+          # à une version précise, choisie et mise à jour délibérément
+          # par la personne qui l'administre — pas réinstallés/mis à
+          # jour silencieusement à chaque run CI. Un `apt-get install`
+          # sans version épinglée à chaque exécution cassait la
+          # reproductibilité des builds (chaque run pouvait utiliser
+          # une version différente de Packer selon la date) et
+          # élargissait inutilement la surface d'attaque (confiance
+          # aveugle au dépôt HashiCorp à chaque exécution, sur un
+          # runner persistant qui n'a besoin d'installer qu'une seule
+          # fois). Voir PLAN.md, questions ouvertes.
           command -v packer >/dev/null 2>&1 || { echo "::error::packer introuvable sur ce runner — à installer manuellement, voir RELEASE.md"; exit 1; }
           command -v VBoxManage >/dev/null 2>&1 || { echo "::error::VBoxManage introuvable sur ce runner — VirtualBox à installer manuellement, voir RELEASE.md"; exit 1; }
           command -v gh >/dev/null 2>&1 || { echo "::error::gh (GitHub CLI) introuvable sur ce runner — à installer manuellement, voir RELEASE.md"; exit 1; }
+          command -v plumber >/dev/null 2>&1 || { echo "::error::plumber introuvable sur ce runner — à installer manuellement, voir RELEASE.md"; exit 1; }
           echo "Packer : $(packer version)"
           echo "VirtualBox : $(VBoxManage --version)"
           echo "gh : $(gh --version | head -1)"
+          echo "plumber : $(plumber --version 2>&1 | head -1)"
+
+      - name: Contrôle de conformité CI (Plumber) — avant le build coûteux
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Placé avant packer build (20+ min) pour échouer vite en cas
+          # de régression de sécurité CI, plutôt que de gaspiller du
+          # temps de build. --score-push publie le badge public une
+          # fois que ce workflow tourne réellement en CI (no-op en
+          # local, nécessite le jeton OIDC — voir PLAN.md). Seuil B
+          # plutôt que A : bloque les vraies régressions (n'importe
+          # quel Critical ou plusieurs High) sans être cassant pour un
+          # simple finding mineur isolé.
+          plumber analyze --score-push --min-score B
 
       - name: Déterminer la version
         id: version
@@ -114,6 +130,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Appel direct à gh plutôt que l'action tierce
+          # softprops/action-gh-release — signalée par Plumber comme
+          # non épinglée par SHA (ISSUE-701) et hors des origines
+          # autorisées (ISSUE-713). Élimine les deux d'un coup plutôt
+          # que d'épingler une dépendance tierce évitable ; gh est déjà
+          # utilisé de la même façon dans la procédure manuelle
+          # documentée dans RELEASE.md.
           gh release create "v${{ steps.version.outputs.version }}" \
             "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/dsoxlab-appliance-${{ steps.version.outputs.version }}.ova" \
             "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/SHA256SUMS" \
