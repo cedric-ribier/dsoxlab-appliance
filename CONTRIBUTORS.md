@@ -17,7 +17,8 @@ couverte, ou aidé à diagnostiquer quelque chose, ta place est ici.*
 | Name / Handle | Contribution | Date |
 | --- | --- | --- |
 | [Cédric Ribier](https://github.com/cedric-ribier) | Author — build, provisioning scripts, documentation | 2026-08 |
-| [Stéphane Morin](https://github.com/PapyPoc) | Tester | 2026-08 |
+| [Stéphane Morin](https://github.com/PapyPoc) | Testé build + installation des providers sous Windows 11 / VirtualBox — a
+trouvé et aidé à diagnostiquer le bug de fin de ligne CRLF | 2026-08 |
 ---
 
 ## How to add yourself / Comment s'ajouter
