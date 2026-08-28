@@ -19,11 +19,20 @@ Other versions may work but have not been verified.
 
 ## 1. Prerequisites
 
+> **If this is the self-hosted CI runner** (not a one-off local build):
+> install Packer and VirtualBox once, at a specific pinned version, and
+> update deliberately rather than letting the workflow reinstall on
+> every run. The CI workflow only *verifies* both are present — it
+> does not install or upgrade them, on purpose (see `PLAN.md`: an
+> earlier version did auto-install "latest" on every run, which broke
+> build reproducibility and widened the attack surface for no benefit
+> on a persistent, non-ephemeral runner).
+
 Hardware Requirements
 
 Minimum recommended configuration:
 
-| Configuration | CPU | RAM | DISQUE | Internet |
+| Configuration | CPU | RAM | DISK | Internet |
 |:--:|:--:|:--:|:--:|:--:|
 |minimal|4 coeurs|8 Go|50 Go|✅|
 |recommandée|8 coeurs|16 Go|100 Go|✅|
@@ -194,7 +203,7 @@ git status
 ```
 The repository must be clean:
 
-```texte
+```text
 nothing to commit, working tree clean
 ```
 Build logs must remain local and must never be committed.
@@ -204,7 +213,7 @@ Example:
 git status
 ```
 must not show anything except optionally untracked local files such as:
-```texte
+```text
 build-*.log
 ```
 

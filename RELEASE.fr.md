@@ -20,6 +20,16 @@ D'autres versions peuvent fonctionner mais n'ont pas été vérifiées.
 
 ## 1. Prérequis
 
+> **Si c'est le runner CI self-hosted** (pas un build local ponctuel) :
+> installer Packer et VirtualBox une seule fois, à une version précise
+> et figée, mise à jour délibérément plutôt que de laisser le workflow
+> réinstaller à chaque run. Le workflow CI se contente de *vérifier*
+> leur présence — il ne les installe ni ne les met à jour, exprès (voir
+> `PLAN.md` : une version antérieure installait automatiquement la
+> "dernière" à chaque run, ce qui cassait la reproductibilité des
+> builds et élargissait inutilement la surface d'attaque sur un runner
+> persistant, pas éphémère).
+
 Prérequis matériels
 
 Configuration minimale recommandée :
