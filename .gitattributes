@@ -1,0 +1,12 @@
+# Force LF pour tous les scripts shell, quel que soit l'OS qui clone/
+# checkout ce dépôt — sans ça, Git sous Windows convertit souvent LF
+# en CRLF au checkout, et ces scripts, copiés tels quels dans la VM
+# par le file provisioner Packer, échouent silencieusement à
+# l'exécution (shebang mal interprété). Constaté le 27/08/2026 : un
+# testeur externe sous Windows a un build fonctionnel en réseau mais
+# sans installation des providers, cohérent avec ce bug précis.
+*.sh text eol=lf
+*.pkr.hcl text eol=lf
+preseed.cfg text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
