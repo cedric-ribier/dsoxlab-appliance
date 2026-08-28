@@ -45,8 +45,10 @@ jobs:
           # seule fois). Voir PLAN.md, questions ouvertes.
           command -v packer >/dev/null 2>&1 || { echo "::error::packer introuvable sur ce runner — à installer manuellement, voir RELEASE.md"; exit 1; }
           command -v VBoxManage >/dev/null 2>&1 || { echo "::error::VBoxManage introuvable sur ce runner — VirtualBox à installer manuellement, voir RELEASE.md"; exit 1; }
+          command -v gh >/dev/null 2>&1 || { echo "::error::gh (GitHub CLI) introuvable sur ce runner — à installer manuellement, voir RELEASE.md"; exit 1; }
           echo "Packer : $(packer version)"
           echo "VirtualBox : $(VBoxManage --version)"
+          echo "gh : $(gh --version | head -1)"
 
       - name: Déterminer la version
         id: version
@@ -109,12 +111,12 @@ jobs:
 
       - name: Publier sur GitHub Releases
         if: github.event_name == 'push' || steps.diff_check.outputs.publish == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          body: |
-            content-hash: ${{ steps.diff_check.outputs.current_sha }}
-            Taille OVA : ${{ steps.size_check.outputs.size_mb }} Mo
-          files: |
-            packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/*.ova
-            packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/SHA256SUMS
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/dsoxlab-appliance-${{ steps.version.outputs.version }}.ova" \
+            "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/SHA256SUMS" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes "content-hash: ${{ steps.diff_check.outputs.current_sha }}
+          Taille OVA : ${{ steps.size_check.outputs.size_mb }} Mo"
