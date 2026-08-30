@@ -97,4 +97,13 @@ build {
     output     = "output/dsoxlab-appliance-${var.image_version}/manifest.json"
     strip_path = true
   }
+
+   post-processor "shell-local" {
+   inline = [
+     "mkdir -p output/dsoxlab-appliance-${var.image_version}/qcow2-extract",
+     "tar -xf output/dsoxlab-appliance-${var.image_version}/dsoxlab-appliance-${var.image_version}.ova -C output/dsoxlab-appliance-${var.image_version}/qcow2-extract",
+     "qemu-img convert -f vmdk -O qcow2 output/dsoxlab-appliance-${var.image_version}/qcow2-extract/*.vmdk output/dsoxlab-appliance-${var.image_version}/dsoxlab-appliance-${var.image_version}.qcow2",
+     "rm -rf output/dsoxlab-appliance-${var.image_version}/qcow2-extract"
+   ]
+ }
 }
