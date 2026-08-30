@@ -18,7 +18,7 @@ couverte, ou aidé à diagnostiquer quelque chose, ta place est ici.*
 | --- | --- | --- |
 | [Cédric Ribier](https://github.com/cedric-ribier) | Author — build, provisioning scripts, documentation | 2026-08 |
 | [Stéphane Morin](https://github.com/PapyPoc) | Tested the build and installed the providers on Windows 11 / VirtualBox — identified and helped diagnose the CRL end-of-line bug | 2026-08 |
-| [Jeremy Barbault-Morin](https://github.com/elric1984-creat) | Tested the appliance (imported OVA) on Debian 13 host / VMware Workstation — live troubleshooting session surfaced and helped fix several issues along the way | 2026-08 |
+| [Jeremy Barbault-Morin](https://github.com/elric1984-create) | Tested the appliance (imported OVA) on Debian 13 host / VMware Workstation — live troubleshooting session surfaced and helped fix several issues along the way | 2026-08 |
 ---
 
 ## How to add yourself / Comment s'ajouter
