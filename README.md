@@ -41,25 +41,28 @@ freshly patched rather than frozen at build time.
   keyboard); the underlying mechanism generalizes to any preseed
   locale/layout.
 - Final image size below the 2 GiB GitHub Release limit.
+- **Independent, from-scratch build by an external tester on Windows
+  11** — found a real bug (`.gitattributes`/CRLF line endings, see
+  [`CONTRIBUTORS.md`](CONTRIBUTORS.md)) that the author's own macOS
+  testing had never surfaced, leading to v0.1.1.
 
 ## What isn't validated yet
 
-- Independent testing by someone other than the author.
-- A from-scratch build by someone other than the author (this
-  repository's own reproducibility, not just the appliance's).
 - CI-driven builds — no self-hosted runner is set up yet (see
   [`PLAN.md`](PLAN.md) for why GitHub-hosted runners aren't a real
   option here).
+- Broader third-party validation — one external tester so far, one
+  platform (Windows 11). Not yet a real compatibility matrix across
+  multiple people/configurations.
 
 ## Where to look
 
-| Document | Audience | What's in it |
-| --- | --- | --- |
-| [`INSTALL.md`](INSTALL.md) | Learners — using the appliance | Download, import, first boot, troubleshooting |
-| [`RELEASE.md`](RELEASE.md) | Contributors — building the appliance | Build, validate, and publish, step by step |
-| [`PLAN.md`](PLAN.md) | Reviewers — evaluating the proposal | Architecture, decisions made and why, open questions |
-| [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Contributors | Repository structure |
-| [`packer/`](packer/) | Contributors | The actual Packer definition, provisioning scripts, CI workflow |
+| Document | What's in it |
+| --- | --- |
+| [`PLAN.md`](PLAN.md) | Architecture, decisions made and why, open questions |
+| [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Repository structure |
+| [`RELEASE.md`](RELEASE.md) | Build, validate, and publish, step by step |
+| [`packer/`](packer/) | The actual Packer definition, provisioning scripts, CI workflow |
 
 ## License
 

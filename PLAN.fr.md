@@ -224,7 +224,12 @@ listés par ordre de blocage :
    une ancienne page du paquet PyPI — CC BY 4.0 — probablement un
    instantané figé d'une release antérieure ; la source vivante GitHub
    a été retenue comme faisant foi).
-4. **Validation indépendante par un tiers.** Tout ce qui précède n'est
-   validé que sur les propres machines de l'auteur (Mac Intel,
-   VirtualBox + VMware Fusion). Pas encore de test par quelqu'un
-   construisant de zéro sur une autre machine.
+4. **Validation indépendante par un tiers — partiellement résolue.**
+   Un testeur externe a construit cette appliance depuis les sources
+   sous Windows 11 et a trouvé un vrai bug (`.gitattributes`/CRLF,
+   voir §4 et `CONTRIBUTORS.md`), menant à la v0.1.1. C'est un build
+   depuis zéro confirmé par quelqu'un d'autre que l'auteur, sur une
+   plateforme (Windows) que l'auteur ne peut pas tester directement.
+   Reste ouvert : validation sur davantage de plateformes/
+   configurations que cette seule instance, et par plus d'une
+   personne.

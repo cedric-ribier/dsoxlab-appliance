@@ -47,26 +47,29 @@ build.
   l'auteur pendant le build) ; le mécanisme sous-jacent se généralise à
   n'importe quelle locale/disposition de preseed.
 - Taille finale de l'image sous la limite de 2 Gio des Releases GitHub.
+- **Build indépendant, depuis zéro, par un testeur externe sous
+  Windows 11** — a trouvé un vrai bug (fins de ligne
+  `.gitattributes`/CRLF, voir [`CONTRIBUTORS.md`](CONTRIBUTORS.md))
+  que les propres tests macOS de l'auteur n'avaient jamais fait
+  remonter, menant à la v0.1.1.
 
 ## Ce qui n'est pas encore validé
 
-- Test indépendant par quelqu'un d'autre que l'auteur.
-- Un build repartant de zéro par quelqu'un d'autre que l'auteur (la
-  reproductibilité de ce dépôt lui-même, pas seulement celle de
-  l'appliance).
 - Builds pilotés par CI — aucun runner self-hosted n'est encore en
   place (voir [`PLAN.md`](PLAN.md) pour pourquoi les runners
   GitHub-hosted ne sont pas une vraie option ici).
+- Validation tierce plus large — un seul testeur externe jusqu'ici,
+  une seule plateforme (Windows 11). Pas encore une vraie matrice de
+  compatibilité sur plusieurs personnes/configurations.
 
 ## Où regarder
 
-| Document | Public | Contenu |
-| --- | --- | --- |
-| [`INSTALL.md`](INSTALL.md) | Apprenants — utiliser l'appliance | Téléchargement, import, premier démarrage, dépannage |
-| [`RELEASE.md`](RELEASE.md) | Contributeurs — construire l'appliance | Build, validation et publication, pas à pas |
-| [`PLAN.md`](PLAN.md) | Relecteurs — évaluer la proposition | Architecture, décisions prises et pourquoi, questions ouvertes |
-| [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Contributeurs | Structure du dépôt |
-| [`packer/`](packer/) | Contributeurs | La définition Packer elle-même, scripts de provisioning, workflow CI |
+| Document | Contenu |
+| --- | --- |
+| [`PLAN.md`](PLAN.md) | Architecture, décisions prises et pourquoi, questions ouvertes |
+| [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Structure du dépôt |
+| [`RELEASE.md`](RELEASE.md) | Build, validation et publication, pas à pas |
+| [`packer/`](packer/) | La définition Packer elle-même, scripts de provisioning, workflow CI |
 
 ## Licence
 

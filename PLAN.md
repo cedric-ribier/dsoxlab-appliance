@@ -208,7 +208,11 @@ merged, listed by how much they block everything else:
    live page — Apache 2.0 — and an older PyPI package page — CC BY
    4.0 — likely a stale snapshot from an earlier release; GitHub's
    live source was treated as authoritative).
-4. **Third-party independent validation.** Everything above is
-   validated on the author's own machines only (Intel Mac, VirtualBox
-   + VMware Fusion). No test yet by someone building from scratch on a
-   different machine.
+4. **Third-party independent validation — partially resolved.** An
+   external tester built this appliance from source on Windows 11 and
+   found a real bug (`.gitattributes`/CRLF, see §4 and
+   `CONTRIBUTORS.md`), leading to v0.1.1. That's one confirmed
+   from-scratch build by someone other than the author, on a platform
+   (Windows) the author can't test directly. Still open: validation on
+   more platforms/configurations than this one instance, and by more
+   than one person.
