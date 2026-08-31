@@ -102,7 +102,7 @@ build {
    inline = [
      "mkdir -p output/dsoxlab-appliance-${var.image_version}/qcow2-extract",
      "tar -xf output/dsoxlab-appliance-${var.image_version}/dsoxlab-appliance-${var.image_version}.ova -C output/dsoxlab-appliance-${var.image_version}/qcow2-extract",
-     "qemu-img convert -f vmdk -O qcow2 output/dsoxlab-appliance-${var.image_version}/qcow2-extract/*.vmdk output/dsoxlab-appliance-${var.image_version}/dsoxlab-appliance-${var.image_version}.qcow2",
+     "qemu-img convert -f vmdk -O qcow2 -c output/dsoxlab-appliance-${var.image_version}/qcow2-extract/*.vmdk output/dsoxlab-appliance-${var.image_version}/dsoxlab-appliance-${var.image_version}.qcow2",
      "rm -rf output/dsoxlab-appliance-${var.image_version}/qcow2-extract"
    ]
  }
