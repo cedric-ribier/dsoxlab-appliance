@@ -112,6 +112,22 @@ test properly. **General lesson, not qcow2-specific**: any
 been booted anywhere — reusing a disk across test environments quietly
 invalidates the test.
 
+### 6. Proxmox's default CPU type (`kvm64`) also hides nested virtualization
+Tested via Proxmox's native import path (`qm importdisk` + `qm set`,
+not raw QEMU command line) — same class of trap as VirtualBox's
+"Enable Nested VT-x/AMD-V" and VMware's "Enable hypervisor
+applications", third hypervisor, same underlying issue: the default
+CPU type Proxmox assigns (`kvm64`) doesn't expose `vmx`/`svm` to the
+guest at all. Fixed with `qm set <vmid> --cpu host` (VM powered off
+first — this is a hardware-level change, not something a soft reboot
+picks up). Once corrected, `dsoxlab-provider-setup.service` — which
+deliberately does *not* self-disable on a failed detection, unlike the
+account-setup service — retried automatically on the next boot and
+succeeded, without needing a fresh, never-booted disk this time. Good
+independent confirmation that the retry-until-success design (see
+`PLAN.md` §3) behaves as intended in a real-world "I forgot to enable
+nested virt the first time" scenario.
+
 ## Final validated result (fresh disk, real KVM host — Debian 13 VM on Proxmox, nested virtualization enabled at the Proxmox VM level)
 
 ```
@@ -130,6 +146,16 @@ First real first-boot on this environment: account creation, network
 adaptation, and the deferred provider install all completed correctly
 against genuine hardware-accelerated nested virtualization — not the
 false positive from #4.
+
+### Third environment: Proxmox native import (`qm importdisk`)
+Same disk, imported via Proxmox's own tooling rather than a manual
+QEMU invocation — closer to how an actual Proxmox user would bring
+this appliance in. Initially failed nested-virt detection with the
+default `kvm64` CPU type (bug #6 above); after `qm set --cpu host` and
+a restart, `virt-host-validate` passed and `dsoxlab doctor` confirmed
+both KVM/libvirt and Incus installed — the deferred-install service
+retrying successfully on its own, no fresh disk needed for this
+retry (see #6).
 
 ## Remaining before this could move toward `main`
 
