@@ -12,9 +12,9 @@ invisibles avec un seul hyperviseur testé.
 
 La procédure a été validée avec :
 
-| Composant | Debian netinst | VirtualBox | Packer | Git | VMware Fusion | VMware Workstation |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Version(s) | 12.15.0 | 7.2.14 - 7.2.16 | 1.15.4 - 1.16 | 2.50.1 - 2.51.0 | 13.6.2 | 26.0.0 (25388281) |
+| Composant | Debian netinst | VirtualBox | Packer | Git | VMware Fusion | VMware Workstation | qemu |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Version(s) | 12.15.0 | 7.2.14 - 7.2.16 | 1.15.4 - 1.16 | 2.50.1 - 2.51.0 | 13.6.2 | 26.0.0 (25388281) | 10.2.0 |
 
 D'autres versions peuvent fonctionner mais n'ont pas été vérifiées.
 
@@ -45,6 +45,7 @@ Configuration minimale recommandée :
 brew install git
 brew install hashicorp/tap/packer
 brew install --cask virtualbox
+brew install qemu
 ```
 
 macOS bloquera probablement l'extension kernel de VirtualBox à la

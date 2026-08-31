@@ -103,7 +103,8 @@ build {
      "mkdir -p output/dsoxlab-appliance-${var.image_version}/qcow2-extract",
      "tar -xf output/dsoxlab-appliance-${var.image_version}/dsoxlab-appliance-${var.image_version}.ova -C output/dsoxlab-appliance-${var.image_version}/qcow2-extract",
      "qemu-img convert -f vmdk -O qcow2 -c output/dsoxlab-appliance-${var.image_version}/qcow2-extract/*.vmdk output/dsoxlab-appliance-${var.image_version}/dsoxlab-appliance-${var.image_version}.qcow2",
-     "rm -rf output/dsoxlab-appliance-${var.image_version}/qcow2-extract"
+     "rm -rf output/dsoxlab-appliance-${var.image_version}/qcow2-extract",
+     "cd output/dsoxlab-appliance-${var.image_version} && (sha256sum dsoxlab-appliance-${var.image_version}.qcow2 2>/dev/null || shasum -a 256 dsoxlab-appliance-${var.image_version}.qcow2) >> SHA256SUMS"
    ]
  }
 }

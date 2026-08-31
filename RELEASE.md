@@ -11,9 +11,9 @@ Validated Versions
 
 This procedure has been validated with:
 
-| Composant | Debian netinst | VirtualBox | Packer | Git | VMware Fusion | VMware Workstation |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Version(s) | 12.15.0 | 7.2.14 - 7.2.16 | 1.15.4 - 1.16 | 2.50.1 - 2.51.0 | 13.6.2 | 26.0.0 (25388281) |
+| Composant | Debian netinst | VirtualBox | Packer | Git | VMware Fusion | VMware Workstation | qemu |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Version(s) | 12.15.0 | 7.2.14 - 7.2.16 | 1.15.4 - 1.16 | 2.50.1 - 2.51.0 | 13.6.2 | 26.0.0 (25388281) | 10.2.0 |
 
 Other versions may work but have not been verified.
 
@@ -43,6 +43,7 @@ Minimum recommended configuration:
 brew install git
 brew install hashicorp/tap/packer
 brew install --cask virtualbox
+brew install qemu
 ```
 
 macOS will likely block VirtualBox's kernel extension on first install
