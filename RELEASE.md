@@ -192,6 +192,53 @@ Same checks as above, plus, if nested virt is enabled:
 sudo journalctl -u dsoxlab-provider-setup.service --no-pager
 dpkg -l | grep -E "incus|qemu-kvm|libvirt"
 ```
+### KVM / qcow2
+
+Boot the produced `.qcow2` directly with QEMU — no separate import
+step needed on a Linux host with KVM available:
+
+```bash
+qemu-system-x86_64 \
+  -m 2048 \
+  -accel kvm \
+  -cpu host \
+  -drive file=output/dsoxlab-appliance-X.Y.Z/dsoxlab-appliance-X.Y.Z.qcow2,if=virtio \
+  -netdev user,id=net0 -device virtio-net,netdev=net0
+```
+
+Don't add `-nographic`: this appliance boots BIOS legacy (not UEFI —
+no `-bios`/`-pflash` flags needed or wanted), and GRUB's default
+output targets the VGA framebuffer; `-nographic` removes it entirely
+and GRUB spins indefinitely trying to write to a display that isn't
+there (looks frozen, but `ps aux` shows the process pinned near 100%
+CPU — it's not actually hung, just stuck). Use a real display window,
+or `-display vnc=:N` if testing over SSH.
+
+If your build/test host doesn't itself have real hardware-accelerated
+virtualization exposed (e.g. testing via nested QEMU without
+`-accel kvm`/`-accel hvf`, or a hypervisor VM whose CPU type doesn't
+expose `vmx`/`svm` to the guest — VirtualBox's "Enable Nested
+VT-x/AMD-V", VMware's "Enable hypervisor applications", and Proxmox's
+CPU type `host` are the equivalent settings across the three), the
+provider-install path will correctly detect this and do nothing
+(retrying every boot) — but `/proc/cpuinfo` inside an *unaccelerated*
+QEMU guest can report `vmx`/`svm` as a false positive with no real
+capability behind it. Confirm with `virt-host-validate qemu`, not just
+a `grep` on `/proc/cpuinfo`, before trusting a negative or positive
+result.
+
+Same checks as the VirtualBox/VMware sections above, plus:
+```bash
+sudo virt-host-validate qemu
+```
+
+Alternative: importing via `virsh`/Proxmox's own tooling (`qm
+importdisk`) is closer to how most real KVM/Proxmox users will bring
+this appliance in, and worth doing at least once — the same
+nested-virt masking shows up there too (Proxmox's default CPU type
+`kvm64` doesn't expose `vmx`/`svm` either; `qm set <vmid> --cpu host`
+fixes it, VM powered off first).
+
 
 ## 6. Tag and publish
 

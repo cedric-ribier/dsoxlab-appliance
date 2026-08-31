@@ -200,6 +200,56 @@ est activée :
 sudo journalctl -u dsoxlab-provider-setup.service --no-pager
 dpkg -l | grep -E "incus|qemu-kvm|libvirt"
 ```
+### KVM / qcow2
+
+Démarre le `.qcow2` produit directement avec QEMU — pas d'étape
+d'import séparée nécessaire sur un hôte Linux avec KVM disponible :
+
+```bash
+qemu-system-x86_64 \
+  -m 2048 \
+  -accel kvm \
+  -cpu host \
+  -drive file=output/dsoxlab-appliance-X.Y.Z/dsoxlab-appliance-X.Y.Z.qcow2,if=virtio \
+  -netdev user,id=net0 -device virtio-net,netdev=net0
+```
+
+N'ajoute pas `-nographic` : cette appliance démarre en BIOS legacy
+(pas UEFI — aucun flag `-bios`/`-pflash` nécessaire ni souhaité), et
+la sortie par défaut de GRUB cible le framebuffer VGA ; `-nographic`
+le supprime entièrement et GRUB boucle indéfiniment à essayer d'écrire
+vers un affichage absent (semble figé, mais `ps aux` montre le
+processus bloqué près de 100% CPU — pas vraiment bloqué, juste coincé
+en boucle). Utilise une vraie fenêtre d'affichage, ou
+`-display vnc=:N` pour un test via SSH.
+
+Si ton hôte de build/test n'expose pas lui-même de virtualisation
+matérielle accélérée réelle (ex. test via QEMU imbriqué sans
+`-accel kvm`/`-accel hvf`, ou une VM d'hyperviseur dont le type de CPU
+n'expose pas `vmx`/`svm` à l'invité — "Enable Nested VT-x/AMD-V" sous
+VirtualBox, "Enable hypervisor applications" sous VMware, et le type
+CPU `host` sous Proxmox sont les réglages équivalents sur les trois),
+le chemin d'installation des providers détecte ça correctement et ne
+fait rien (retente à chaque démarrage) — mais `/proc/cpuinfo` à
+l'intérieur d'un invité QEMU *non accéléré* peut rapporter `vmx`/`svm`
+en faux positif, sans capacité réelle derrière. Confirme avec
+`virt-host-validate qemu`, pas juste un `grep` sur `/proc/cpuinfo`,
+avant de faire confiance à un résultat négatif ou positif.
+
+Mêmes vérifications que les sections VirtualBox/VMware ci-dessus,
+plus :
+```bash
+sudo virt-host-validate qemu
+```
+
+Alternative : importer via l'outillage propre à `virsh`/Proxmox (`qm
+importdisk`) est plus proche de la façon dont la plupart des vrais
+utilisateurs KVM/Proxmox importeront cette appliance, et vaut le coup
+d'être fait au moins une fois — le même masquage de virtualisation
+imbriquée s'y retrouve aussi (le type CPU par défaut de Proxmox,
+`kvm64`, n'expose pas non plus `vmx`/`svm` ; `qm set <vmid> --cpu host`
+corrige ça, VM éteinte au préalable).
+
 
 ## 6. Tag et publication
 
