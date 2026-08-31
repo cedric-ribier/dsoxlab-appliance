@@ -58,6 +58,24 @@ tranchée par les faits, pas par préférence :
   (un vrai emplacement système) plutôt que via `mise use --global`, qui
   écrit dans `~/.config/mise/config.toml` — lié au compte qui a lancé
   la commande, en l'occurrence `packer`, désormais supprimé.
+- **Firmware : BIOS legacy, pas UEFI.** Jamais configuré délibérément —
+  `virtualbox-iso` retombe par défaut sur le BIOS legacy, et c'est ce
+  sur quoi cette appliance a toujours démarré, passé inaperçu jusqu'à
+  ce qu'une expérimentation qcow2 ultérieure le révèle explicitement
+  (tenter un boot UEFI contre cette appliance ne trouvait aucune
+  partition ESP, puisqu'aucune n'a jamais été créée — voir
+  `QCOW2-EXPERIMENT.md` sur la branche `dev`). Confirmé fonctionnel sur
+  chaque format/hyperviseur validé jusqu'ici (VirtualBox, VMware, et
+  sur `dev` : KVM/qcow2 sur trois environnements dont un import natif
+  Proxmox). Aucun problème de compatibilité signalé par un testeur.
+  Rester délibérément en BIOS legacy : basculer vers UEFI est un vrai
+  chantier (partitionnement GPT + ESP FAT32 dans le preseed,
+  configuration explicite `loader`/`nv_ram` dans Packer — tenté une
+  fois pour l'OVA et abandonné une fois qu'il s'est avéré ne pas être
+  nécessaire), pas un simple flag à activer, et aucun besoin concret
+  (exigence Secure Boot, politique d'entreprise précise) n'est apparu
+  jusqu'ici. À revoir si un vrai besoin apparaît, plutôt que de
+  basculer par anticipation.
 
 ## 3. Mécanismes de premier démarrage
 
