@@ -108,7 +108,7 @@ jobs:
       - name: Calculer le hash de contenu
         id: content_hash
         run: |
-          CURRENT_SHA=$(sha256sum packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/manifest.json | cut -d' ' -f1)
+          CURRENT_SHA=$(git rev-parse HEAD:packer)
           echo "current_sha=$CURRENT_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Comparer au contenu de la dernière Release publiée
