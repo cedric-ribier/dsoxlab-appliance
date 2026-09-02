@@ -84,11 +84,11 @@ jobs:
 
       - name: packer validate
         working-directory: packer
-        run: packer validate -var "image_version=${{ steps.version.outputs.version }}" dsoxlab-appliance.pkr.hcl
+        run: packer validate -var "image_version=${{ steps.version.outputs.version }}" .
 
       - name: packer build
         working-directory: packer
-        run: packer build -var "image_version=${{ steps.version.outputs.version }}" dsoxlab-appliance.pkr.hcl
+        run: packer build -var "image_version=${{ steps.version.outputs.version }}" .
 
       - name: Vérifier la taille de l'OVA (limite 2 Go GitHub Release)
         id: size_check
