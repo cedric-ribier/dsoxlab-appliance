@@ -94,7 +94,7 @@ jobs:
         id: size_check
         working-directory: packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}
         run: |
-          SIZE_BYTES=$(stat -c%s *.ova)
+          SIZE_BYTES=$(stat -c%s *.ova 2>/dev/null || stat -f%z *.ova)
           SIZE_MB=$((SIZE_BYTES / 1024 / 1024))
           echo "Taille OVA : ${SIZE_MB} Mo"
           echo "size_mb=$SIZE_MB" >> "$GITHUB_OUTPUT"
