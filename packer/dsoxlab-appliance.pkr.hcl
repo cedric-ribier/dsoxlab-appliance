@@ -75,6 +75,7 @@ build {
 
   provisioner "shell" {
     execute_command = "echo '${var.ssh_password}' | sudo -S -E {{ .Vars }} bash '{{ .Path }}'"
+    expect_disconnect = true
     environment_vars = [
       "DSOXLAB_PROVIDERS=${var.providers}"
     ]
