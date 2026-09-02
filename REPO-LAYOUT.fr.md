@@ -19,7 +19,8 @@ dsoxlab/
     ├── REPO-LAYOUT.fr.md            # (FR)
     ├── RELEASE.md                   # procédure build/validation/publication (EN)
     ├── RELEASE.fr.md                # (FR)
-    ├── LICENSE                      # Apache License 2.0
+    ├── QCOW2-EXPERIMENT.md          # qcow2 format validation log (dev-branch origin, EN only)
+    ├── LICENSE                   # Apache License 2.0
     ├── .gitignore
     ├── .github/
     │   └── workflows/

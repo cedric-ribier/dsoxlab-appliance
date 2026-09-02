@@ -3,6 +3,7 @@ packer/output/
 crash.log
 *.pkrvars.hcl
 .packer.d/
+*.qcow2
 
 # Fichiers d'éditeur / OS
 .DS_Store
