@@ -47,10 +47,12 @@ jobs:
           command -v VBoxManage >/dev/null 2>&1 || { echo "::error::VBoxManage introuvable sur ce runner — VirtualBox à installer manuellement, voir RELEASE.md"; exit 1; }
           command -v gh >/dev/null 2>&1 || { echo "::error::gh (GitHub CLI) introuvable sur ce runner — à installer manuellement, voir RELEASE.md"; exit 1; }
           command -v plumber >/dev/null 2>&1 || { echo "::error::plumber introuvable sur ce runner — à installer manuellement, voir RELEASE.md"; exit 1; }
+          command -v qemu-img >/dev/null 2>&1 || { echo "::error::qemu-img introuvable sur ce runner — à installer manuellement (paquet qemu-utils), voir RELEASE.md"; exit 1; }
           echo "Packer : $(packer version)"
           echo "VirtualBox : $(VBoxManage --version)"
           echo "gh : $(gh --version | head -1)"
           echo "plumber : $(plumber --version 2>&1 | head -1)"
+          echo "qemu-img : $(qemu-img --version | head -1)"
 
       - name: Contrôle de conformité CI (Plumber) — avant le build coûteux
         env:
@@ -123,7 +125,9 @@ jobs:
         if: github.event_name == 'push' || steps.diff_check.outputs.publish == 'true'
         uses: actions/attest-build-provenance@v1
         with:
-          subject-path: 'packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/*.ova'
+          subject-path: |
+            packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/*.ova
+            packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/*.qcow2
 
       - name: Publier sur GitHub Releases
         if: github.event_name == 'push' || steps.diff_check.outputs.publish == 'true'
@@ -139,6 +143,7 @@ jobs:
           # documentée dans RELEASE.md.
           gh release create "v${{ steps.version.outputs.version }}" \
             "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/dsoxlab-appliance-${{ steps.version.outputs.version }}.ova" \
+            "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/dsoxlab-appliance-${{ steps.version.outputs.version }}.qcow2" \
             "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/SHA256SUMS" \
             --title "v${{ steps.version.outputs.version }}" \
             --notes "content-hash: ${{ steps.diff_check.outputs.current_sha }}
