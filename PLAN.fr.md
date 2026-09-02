@@ -58,6 +58,24 @@ tranchée par les faits, pas par préférence :
   (un vrai emplacement système) plutôt que via `mise use --global`, qui
   écrit dans `~/.config/mise/config.toml` — lié au compte qui a lancé
   la commande, en l'occurrence `packer`, désormais supprimé.
+- **Firmware : BIOS legacy, pas UEFI.** Jamais configuré délibérément —
+  `virtualbox-iso` retombe par défaut sur le BIOS legacy, et c'est ce
+  sur quoi cette appliance a toujours démarré, passé inaperçu jusqu'à
+  ce qu'une expérimentation qcow2 ultérieure le révèle explicitement
+  (tenter un boot UEFI contre cette appliance ne trouvait aucune
+  partition ESP, puisqu'aucune n'a jamais été créée — voir
+  `QCOW2-EXPERIMENT.md` sur la branche `dev`). Confirmé fonctionnel sur
+  chaque format/hyperviseur validé jusqu'ici (VirtualBox, VMware, et
+  sur `dev` : KVM/qcow2 sur trois environnements dont un import natif
+  Proxmox). Aucun problème de compatibilité signalé par un testeur.
+  Rester délibérément en BIOS legacy : basculer vers UEFI est un vrai
+  chantier (partitionnement GPT + ESP FAT32 dans le preseed,
+  configuration explicite `loader`/`nv_ram` dans Packer — tenté une
+  fois pour l'OVA et abandonné une fois qu'il s'est avéré ne pas être
+  nécessaire), pas un simple flag à activer, et aucun besoin concret
+  (exigence Secure Boot, politique d'entreprise précise) n'est apparu
+  jusqu'ici. À revoir si un vrai besoin apparaît, plutôt que de
+  basculer par anticipation.
 
 ## 3. Mécanismes de premier démarrage
 
@@ -206,7 +224,12 @@ listés par ordre de blocage :
    une ancienne page du paquet PyPI — CC BY 4.0 — probablement un
    instantané figé d'une release antérieure ; la source vivante GitHub
    a été retenue comme faisant foi).
-4. **Validation indépendante par un tiers.** Tout ce qui précède n'est
-   validé que sur les propres machines de l'auteur (Mac Intel,
-   VirtualBox + VMware Fusion). Pas encore de test par quelqu'un
-   construisant de zéro sur une autre machine.
+4. **Validation indépendante par un tiers — partiellement résolue.**
+   Un testeur externe a construit cette appliance depuis les sources
+   sous Windows 11 et a trouvé un vrai bug (`.gitattributes`/CRLF,
+   voir §4 et `CONTRIBUTORS.md`), menant à la v0.1.1. C'est un build
+   depuis zéro confirmé par quelqu'un d'autre que l'auteur, sur une
+   plateforme (Windows) que l'auteur ne peut pas tester directement.
+   Reste ouvert : validation sur davantage de plateformes/
+   configurations que cette seule instance, et par plus d'une
+   personne.

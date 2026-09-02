@@ -54,6 +54,22 @@ not by preference:
   system-wide location) rather than `mise use --global`, which writes
   to `~/.config/mise/config.toml` — tied to whichever account ran the
   command, which was `packer`, now deleted.
+- **Firmware: BIOS legacy, not UEFI.** Never configured deliberately —
+  `virtualbox-iso` defaults to BIOS legacy, and that's what this
+  appliance has always booted as, unnoticed until a later qcow2
+  experiment surfaced it explicitly (attempting UEFI boot against this
+  appliance failed to find any ESP partition, since none was ever
+  created — see `QCOW2-EXPERIMENT.md` on the `dev` branch). Confirmed
+  working across every format/hypervisor validated so far (VirtualBox,
+  VMware, and on `dev`: KVM/qcow2 across three environments including
+  native Proxmox import). No compatibility issue reported by any
+  tester. Staying on BIOS legacy deliberately: switching to UEFI is a
+  real undertaking (GPT partitioning + FAT32 ESP in the preseed,
+  explicit `loader`/`nv_ram` configuration in Packer — attempted once
+  for the OVA and abandoned when it turned out not to be needed), not
+  a flag to flip, and no concrete requirement for it (Secure Boot
+  enforcement, specific enterprise policy) has surfaced yet. Revisit
+  if a real need appears rather than switching preemptively.
 
 ## 3. First-boot mechanisms
 
@@ -192,7 +208,11 @@ merged, listed by how much they block everything else:
    live page — Apache 2.0 — and an older PyPI package page — CC BY
    4.0 — likely a stale snapshot from an earlier release; GitHub's
    live source was treated as authoritative).
-4. **Third-party independent validation.** Everything above is
-   validated on the author's own machines only (Intel Mac, VirtualBox
-   + VMware Fusion). No test yet by someone building from scratch on a
-   different machine.
+4. **Third-party independent validation — partially resolved.** An
+   external tester built this appliance from source on Windows 11 and
+   found a real bug (`.gitattributes`/CRLF, see §4 and
+   `CONTRIBUTORS.md`), leading to v0.1.1. That's one confirmed
+   from-scratch build by someone other than the author, on a platform
+   (Windows) the author can't test directly. Still open: validation on
+   more platforms/configurations than this one instance, and by more
+   than one person.
