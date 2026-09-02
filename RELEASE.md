@@ -97,6 +97,12 @@ sudo usermod -aG vboxusers $USER
 ```
 Log out and back in afterward.
 
+#### qemu-img (for qcow2 conversion)
+
+```bash
+sudo apt install -y qemu-utils
+```
+
 ### Windows
 
 > **Hyper-V/WSL2 conflict — read before installing anything.**
