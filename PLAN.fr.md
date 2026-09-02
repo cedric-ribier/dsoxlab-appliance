@@ -47,7 +47,14 @@ tranchée par les faits, pas par préférence :
   artefact de build est importé et validé sur VirtualBox **et** VMware
   Fusion — pas de chemin de build séparé spécifique à VMware, qui
   nécessiterait `ovftool` (propriétaire, compte Broadcom) et
-  compliquerait la CI.
+  compliquerait la CI. Un post-processor `shell-local` supplémentaire
+  convertit ensuite le VMDK de cette même OVA en `.qcow2` via
+  `qemu-img convert -c` (compression qcow2 native — sans elle, le
+  fichier gonfle à environ 3× la taille de l'OVA, le VMDK source étant
+  déjà compressé nativement par VirtualBox). Un seul `packer build`
+  produit donc les deux artefacts, validés sur trois hyperviseurs au
+  total (VirtualBox, VMware Fusion, KVM réel) — voir
+  `QCOW2-EXPERIMENT.md` pour le journal complet de validation.
 - **Outils runtime** : installés sous `/opt/dsoxlab-appliance`, pas dans
   le home d'un utilisateur. Le compte de build (`packer`) est
   entièrement supprimé au premier démarrage réel, avec son home — tout

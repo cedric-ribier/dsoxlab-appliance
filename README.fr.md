@@ -32,17 +32,24 @@ build.
 
 ## Ce qui est validé
 
-- Build propre depuis un netinst Debian 12.15 via Packer/VirtualBox.
+- Build propre depuis un netinst Debian 12.15 via Packer/VirtualBox,
+  produisant à la fois une `.ova` (VirtualBox/VMware) et un `.qcow2`
+  (KVM, libvirt, Proxmox) depuis un seul build.
 - Démarre et termine la configuration de premier démarrage sur
-  VirtualBox **et** VMware Fusion, depuis le même artefact `.ova`.
+  VirtualBox, VMware Fusion, et un vrai KVM (testé via QEMU brut et
+  import natif Proxmox) — trois hyperviseurs validés, un seul build.
 - Le réseau s'adapte automatiquement à l'hyperviseur qui l'a importée
   (nom d'interface détecté au premier démarrage, pas figé depuis la
-  machine de build — VirtualBox et VMware Fusion nomment les cartes
-  réseau différemment).
+  machine de build — chaque hyperviseur nomme les cartes réseau
+  différemment).
 - KVM/libvirt et Incus s'installent au premier démarrage quand la
-  virtualisation imbriquée est disponible, confirmé sur VMware Fusion
-  (hôte Intel) ; ne tentent **rien** (et ne gaspillent ni espace ni
-  surface d'attaque) quand elle ne l'est pas.
+  virtualisation imbriquée est disponible — confirmé sur VMware Fusion
+  et sur un vrai hôte KVM (Proxmox, y compris un import natif via `qm
+  importdisk`) ; ne tentent **rien** (et ne gaspillent ni espace ni
+  surface d'attaque) quand elle ne l'est pas. Voir
+  [`QCOW2-EXPERIMENT.md`](QCOW2-EXPERIMENT.md) pour le journal complet
+  de validation, y compris un piège de détection en faux positif
+  spécifique aux tests QEMU non accélérés.
 - Locale française/AZERTY fonctionnelle de bout en bout (clavier de
   l'auteur pendant le build) ; le mécanisme sous-jacent se généralise à
   n'importe quelle locale/disposition de preseed.

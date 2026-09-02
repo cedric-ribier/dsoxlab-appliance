@@ -27,16 +27,23 @@ freshly patched rather than frozen at build time.
 
 ## What's validated
 
-- Builds cleanly from a Debian 12.15 netinst via Packer/VirtualBox.
-- Boots and completes first-run setup on **both** VirtualBox and VMware
-  Fusion from the same `.ova` artifact.
+- Builds cleanly from a Debian 12.15 netinst via Packer/VirtualBox,
+  producing both a `.ova` (VirtualBox/VMware) and a `.qcow2` (KVM,
+  libvirt, Proxmox) from a single build.
+- Boots and completes first-run setup on VirtualBox, VMware Fusion,
+  and real KVM (tested via raw QEMU and native Proxmox import) —
+  three hypervisors validated, one build.
 - Network adapts automatically to whichever hypervisor imported it
   (interface name is detected at first boot, not hardcoded from the
-  build machine — VirtualBox and VMware Fusion name NICs differently).
+  build machine — each hypervisor names NICs differently).
 - KVM/libvirt and Incus install themselves on first boot when nested
-  virtualization is available, confirmed on VMware Fusion (Intel
-  host); do **not** attempt anything (and don't waste space or expose
-  extra attack surface) when it isn't.
+  virtualization is available — confirmed on VMware Fusion and on a
+  real KVM host (Proxmox, including native `qm importdisk` import);
+  do **not** attempt anything (and don't waste space or expose extra
+  attack surface) when it isn't. See
+  [`QCOW2-EXPERIMENT.md`](QCOW2-EXPERIMENT.md) for the full validation
+  log, including a false-positive detection pitfall specific to
+  unaccelerated QEMU testing.
 - French/AZERTY locale works end-to-end (build-time author's own
   keyboard); the underlying mechanism generalizes to any preseed
   locale/layout.
