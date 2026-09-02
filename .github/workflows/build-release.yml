@@ -104,15 +104,19 @@ jobs:
           else
             echo "needs_compression=false" >> "$GITHUB_OUTPUT"
           fi
+      
+      - name: Calculer le hash de contenu
+        id: content_hash
+        run: |
+          CURRENT_SHA=$(sha256sum packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/manifest.json | cut -d' ' -f1)
+          echo "current_sha=$CURRENT_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Comparer au contenu de la dernière Release publiée
         id: diff_check
         if: github.event_name == 'schedule'
         run: |
           LATEST_SHA=$(gh release view --json body -q '.body' 2>/dev/null | grep -oP 'content-hash: \K\w+' || echo "none")
-          CURRENT_SHA=$(sha256sum packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/manifest.json | cut -d' ' -f1)
-          echo "current_sha=$CURRENT_SHA" >> "$GITHUB_OUTPUT"
-          if [ "$LATEST_SHA" == "$CURRENT_SHA" ] && [ "${{ github.event.inputs.force_publish }}" != "true" ]; then
+          if [ "$LATEST_SHA" == "${{ steps.content_hash.outputs.current_sha }}" ] && [ "${{ github.event.inputs.force_publish }}" != "true" ]; then
             echo "publish=false" >> "$GITHUB_OUTPUT"
             echo "Aucun changement détecté depuis la dernière Release — pas de publication ce mois-ci."
           else
@@ -146,5 +150,5 @@ jobs:
             "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/dsoxlab-appliance-${{ steps.version.outputs.version }}.qcow2" \
             "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/SHA256SUMS" \
             --title "v${{ steps.version.outputs.version }}" \
-            --notes "content-hash: ${{ steps.diff_check.outputs.current_sha }}
+            --notes "content-hash: ${{ steps.content_hash.outputs.current_sha }}
           Taille OVA : ${{ steps.size_check.outputs.size_mb }} Mo"
