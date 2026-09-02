@@ -50,11 +50,38 @@ macOS will likely block VirtualBox's kernel extension on first install
 
 ### Linux (Debian/Ubuntu)
 
+#### Packer
+
 ```bash
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp.gpg
-echo "deb [signed-by=/usr/share/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 sudo apt update
-sudo apt install -y packer virtualbox
+sudo apt install -y packer git
+```
+
+#### VirtualBox
+
+Debian's own repositories don't reliably ship VirtualBox (dropped due
+to non-free kernel module licensing) — use Oracle's official repo
+instead, which also works identically on Ubuntu:
+
+```bash
+wget -O- https://www.virtualbox.org/download/oracle_vbox_2016.asc | sudo gpg --yes --output /usr/share/keyrings/oracle-virtualbox-2016.gpg --dearmor
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/oracle-virtualbox-2016.gpg] https://download.virtualbox.org/virtualbox/debian $(lsb_release -cs) contrib" | sudo tee /etc/apt/sources.list.d/virtualbox.list
+sudo apt update
+sudo apt install -y virtualbox-7.1
+```
+
+Key fingerprint to verify if you want to double-check before trusting
+it: `B9F8 D658 297A F3EF C18D  5CDF A2F6 83C5 2980 AECF` (Oracle
+Corporation, VirtualBox archive signing key).
+
+If `apt update` reports `BADSIG` errors afterward (stale cached
+signatures from an earlier attempt):
+```bash
+sudo apt-get clean
+sudo rm -rf /var/lib/apt/lists/*
+sudo apt-get update
 ```
 
 No known hypervisor conflict on Linux — VirtualBox's kernel module
