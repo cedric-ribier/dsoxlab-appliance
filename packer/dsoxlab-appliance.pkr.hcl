@@ -79,6 +79,8 @@ build {
     environment_vars = [
       "DSOXLAB_PROVIDERS=${var.providers}"
     ]
+    # 06-verify tourne avant 05-cleanup (qui verrouille le compte de build) — voir REPO-LAYOUT.md
+    # 06-verify runs before 05-cleanup (which locks the build account) — see REPO-LAYOUT.md
     scripts = [
       "scripts/01-base.sh",
       "scripts/02-uv-dsoxlab.sh",

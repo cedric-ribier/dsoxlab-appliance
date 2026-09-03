@@ -12,6 +12,8 @@ echo "    Scope demandé : ${PROVIDERS}"
 
 export DEBIAN_FRONTEND=noninteractive
 
+# Installation de KVM/libvirt si le scope le demande
+# Install KVM/libvirt if the scope requests it
 if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "kvm" ]; then
   echo "==> Installation KVM/libvirt"
   apt-get install -y \
@@ -30,6 +32,8 @@ else
   echo "==> KVM/libvirt exclu du scope (DSOXLAB_PROVIDERS=$PROVIDERS)"
 fi
 
+# Installation d'Incus si le scope le demande (dépôt Zabbly)
+# Install Incus if the scope requests it (Zabbly repo)
 if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "incus" ]; then
   echo "==> Installation Incus"
   install -d -m 0755 /etc/apt/keyrings

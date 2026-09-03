@@ -3,6 +3,8 @@ set -euo pipefail
 
 echo "==> 06-verify: vérification finale avant export"
 
+# Vérification du clavier FR
+# Verify FR keyboard layout
 if ! grep -q '^XKBLAYOUT="fr"' /etc/default/keyboard; then
   echo " [INFO] Correction de la configuration clavier vers FR"
 
@@ -18,6 +20,8 @@ export PATH="/opt/dsoxlab-appliance/bin:/opt/dsoxlab-appliance/mise/shims:$PATH"
 
 FAIL=0
 
+# Enregistre un échec sans interrompre les autres contrôles
+# Record a failure without interrupting the remaining checks
 check() {
   local desc="$1"
   shift
@@ -44,6 +48,8 @@ fi
 
 check "aucun catalogue embarqué (~ vide de dépôts git)" bash -c '[ -z "$(find /home/packer -maxdepth 2 -iname ".git" 2>/dev/null)" ]'
 
+# Build interrompu si un contrôle a échoué
+# Abort the build if any check failed
 if [ "$FAIL" -ne 0 ]; then
   echo "==> 06-verify: ÉCHEC — build interrompu, voir détails ci-dessus"
   exit 1
