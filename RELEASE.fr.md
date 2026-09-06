@@ -12,9 +12,25 @@ invisibles avec un seul hyperviseur testé.
 
 La procédure a été validée avec :
 
-| Composant | Debian netinst | VirtualBox | Packer | Git | VMware Fusion | VMware Workstation | qemu |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Version(s) | 12.15.0 | 7.2.14 - 7.2.16 | 1.15.4 - 1.16 | 2.50.1 - 2.51.0 | 13.6.2 | 26.0.0 (25388281) | 10.2.0 |
+### Build (étapes 1 à 3)
+ 
+| Composant | Debian netinst | Packer | VirtualBox (builder Packer) | qemu-img (conversion qcow2) | Git |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| Version(s) | 12.15.0 | 1.15.4 - 1.16 | 7.2.14 - 7.2.16 | 10.2.0 | 2.50.1 - 2.51.0 |
+ 
+### Déploiement / Validation (étape 5)
+ 
+| Composant | VirtualBox | VMware Fusion | VMware Workstation | qemu (qemu-system-x86_64) |
+|:---:|:---:|:---:|:---:|:---:|
+| Version(s) | 7.2.14 - 7.2.16 | 13.6.2 | 26.0.0 (25388281) | 10.2.0 |
+ 
+> VirtualBox et qemu apparaissent dans les deux tableaux : la même
+> installation sert à la fois d'outil de build (builder Packer pour
+> VirtualBox, `qemu-img` pour la conversion qcow2) et d'outil de
+> validation de l'artefact produit (import de l'OVA, boot du qcow2
+> avec `qemu-system-x86_64`). Git n'intervient pas dans la validation
+> de l'appliance elle-même : il sert au clonage du dépôt et au tag /
+> push de la release (étape 6).
 
 D'autres versions peuvent fonctionner mais n'ont pas été vérifiées.
 

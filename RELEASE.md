@@ -11,9 +11,25 @@ Validated Versions
 
 This procedure has been validated with:
 
-| Composant | Debian netinst | VirtualBox | Packer | Git | VMware Fusion | VMware Workstation | qemu |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Version(s) | 12.15.0 | 7.2.14 - 7.2.16 | 1.15.4 - 1.16 | 2.50.1 - 2.51.0 | 13.6.2 | 26.0.0 (25388281) | 10.2.0 |
+### Build (steps 1-3)
+ 
+| Component | Debian netinst | Packer | VirtualBox (Packer builder) | qemu-img (qcow2 conversion) | Git |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| Version(s) | 12.15.0 | 1.15.4 - 1.16 | 7.2.14 - 7.2.16 | 10.2.0 | 2.50.1 - 2.51.0 |
+ 
+### Deployment / Validation (step 5)
+ 
+| Component | VirtualBox | VMware Fusion | VMware Workstation | qemu (qemu-system-x86_64) |
+|:---:|:---:|:---:|:---:|:---:|
+| Version(s) | 7.2.14 - 7.2.16 | 13.6.2 | 26.0.0 (25388281) | 10.2.0 |
+ 
+> VirtualBox and qemu show up in both tables: the same install is
+> both a build tool (VirtualBox as the Packer builder, `qemu-img` for
+> the qcow2 conversion) and a validation tool for the produced
+> artifact (importing the OVA, booting the qcow2 with
+> `qemu-system-x86_64`). Git isn't used to validate the appliance
+> itself — it's needed to clone the repo and to tag/push the release
+> (step 6).
 
 Other versions may work but have not been verified.
 
