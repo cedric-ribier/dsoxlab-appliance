@@ -1,6 +1,6 @@
 # dsoxlab-appliance
 
-*[English version](README.md)*
+*[English version](README.md)* [![Plumber Score](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance.svg)](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance)
 
 > **Statut : proposition, preuve de concept validée — non fusionnée,
 > non publiée.** Rédigé en réponse à
@@ -77,6 +77,7 @@ build.
 | [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Structure du dépôt |
 | [`RELEASE.md`](RELEASE.md) | Build, validation et publication, pas à pas |
 | [`packer/`](packer/) | La définition Packer elle-même, scripts de provisioning, workflow CI |
+| [`.github/workflows/plumber.yml`](.github/workflows/plumber.yml) | Scan de sécurité CI (Plumber) — remontée SARIF sur chaque PR/push |
 
 ## Licence
 

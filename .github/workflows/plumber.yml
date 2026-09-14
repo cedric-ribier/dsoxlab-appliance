@@ -1,0 +1,26 @@
+name: Plumber
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  plumber:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Plumber — analyse CI/CD + upload SARIF
+        uses: getplumber/plumber@10837e44cddfed934eaa2b509e677286af23e149 # v0.4.63
+        with:
+          # Reprend le .plumber.yaml déjà commité à la racine (auto-détecté).
+          min-score: B      # même seuil que le gate CLI dans build-release.yml
+          soft-fail: true   # ne bloque pas la PR — les findings remontent dans Security,
+                             # le gate bloquant reste build-release.yml avant le build packer
+          score-push: false # le badge public est déjà poussé par le job de release
+          upload-sarif: true

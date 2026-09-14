@@ -1,6 +1,6 @@
 # dsoxlab-appliance
 
-*[Version française](README.fr.md)*
+*[Version française](README.fr.md)* [![Plumber Score](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance.svg)](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance)
 
 > **Status: proposal, validated proof-of-concept — not merged, not published.**
 > Written in response to [stephrobert/dsoxlab#91](https://github.com/stephrobert/dsoxlab/issues/91).
@@ -70,6 +70,7 @@ freshly patched rather than frozen at build time.
 | [`REPO-LAYOUT.md`](REPO-LAYOUT.md) | Repository structure |
 | [`RELEASE.md`](RELEASE.md) | Build, validate, and publish, step by step |
 | [`packer/`](packer/) | The actual Packer definition, provisioning scripts, CI workflow |
+| [`.github/workflows/plumber.yml`](.github/workflows/plumber.yml) | CI security scan (Plumber) — SARIF findings on every PR/push |
 
 ## License
 
