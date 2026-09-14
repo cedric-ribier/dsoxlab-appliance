@@ -1,6 +1,9 @@
 # dsoxlab-appliance
 
-*[Version française](README.fr.md)* [![Plumber Score](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance.svg)](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance)
+**Read this in another language:**  *[Version française](README.fr.md)* 
+
+[![Plumber Score](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance.svg)](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 
 > **Status: proposal, validated proof-of-concept — not merged, not published.**
 > Written in response to [stephrobert/dsoxlab#91](https://github.com/stephrobert/dsoxlab/issues/91).

@@ -1,6 +1,9 @@
 # dsoxlab-appliance
 
-*[English version](README.md)* [![Plumber Score](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance.svg)](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance)
+**Autre langue :**  *[English version](README.md)*
+
+[![Plumber Score](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance.svg)](https://score.getplumber.io/github.com/cedric-ribier/dsoxlab-appliance)
+[![Licence : Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 
 > **Statut : proposition, preuve de concept validée — non fusionnée,
 > non publiée.** Rédigé en réponse à
