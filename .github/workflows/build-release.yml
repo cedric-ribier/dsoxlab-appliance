@@ -74,7 +74,7 @@ jobs:
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             VERSION="${GITHUB_REF_NAME#v}"
           else
-            VERSION=$(date +'%Y.%m.0')
+            VERSION=$(date -u +'%Y.%m.0')
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
@@ -128,7 +128,7 @@ jobs:
             echo "publish=false" >> "$GITHUB_OUTPUT"
             echo "Aucun changement détecté — pas de publication."
           fi
-          
+
       - name: Attestation de build (provenance)
         if: github.event_name == 'push' || steps.diff_check.outputs.publish == 'true'
         uses: actions/attest-build-provenance@v1
