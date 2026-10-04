@@ -113,18 +113,22 @@ jobs:
 
       - name: Comparer au contenu de la dernière Release publiée
         id: diff_check
-        if: github.event_name == 'schedule'
-        run: |
-          LATEST_SHA=$(gh release view --json body -q '.body' 2>/dev/null | grep -oP 'content-hash: \K\w+' || echo "none")
-          if [ "$LATEST_SHA" == "${{ steps.content_hash.outputs.current_sha }}" ] && [ "${{ github.event.inputs.force_publish }}" != "true" ]; then
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            echo "Aucun changement détecté depuis la dernière Release — pas de publication ce mois-ci."
-          else
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-          fi
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
-
+          FORCE: ${{ inputs.force_publish || false }}
+          CURRENT_SHA: ${{ steps.content_hash.outputs.current_sha }}
+        run: |
+          LATEST_SHA=$(gh release view --json body \
+            --jq '.body | capture("content-hash: (?<h>[0-9a-f]+)").h' 2>/dev/null || echo "none")
+          echo "Dernière Release : ${LATEST_SHA} — contenu actuel : ${CURRENT_SHA}"
+          if [ "$FORCE" = "true" ] || [ "$LATEST_SHA" != "$CURRENT_SHA" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Aucun changement détecté — pas de publication."
+          fi
+          
       - name: Attestation de build (provenance)
         if: github.event_name == 'push' || steps.diff_check.outputs.publish == 'true'
         uses: actions/attest-build-provenance@v1
