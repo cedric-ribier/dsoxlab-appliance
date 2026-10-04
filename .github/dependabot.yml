@@ -1,0 +1,17 @@
+# Mises à jour des actions GitHub épinglées par SHA.
+# Dependabot remplace le SHA ET le commentaire « # vX.Y.Z » ;
+# rien n'est appliqué sans fusion manuelle de la PR.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /                      # Dependabot lit .github/workflows/ à partir d'ici
+    schedule:
+      interval: monthly               # même rythme que le build mensuel
+    commit-message:
+      prefix: "ci"                    # PR et commits nommés « ci: bump actions/checkout… »
+    labels:
+      - dependencies
+      - ci
+    groups:
+      actions:
+        patterns: ["*"]               # une seule PR pour toutes les actions, pas une par action

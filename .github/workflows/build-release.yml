@@ -15,10 +15,7 @@ on:
   push:
     tags: ['v*']
 
-permissions:
-  contents: write
-  id-token: write
-  attestations: write
+permissions: {}
 
 jobs:
   build:
@@ -26,9 +23,15 @@ jobs:
     # VirtualBox installé, ce que les runners GitHub-hosted standards
     # n'offrent pas nativement.
     runs-on: self-hosted
-
+    permissions:
+      contents: write      # gh release create (+ lecture pour checkout)
+      id-token: write      # OIDC : attestation de provenance, plumber --score-push
+      attestations: write  # attest-build-provenance
+      
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Vérifier que Packer, VirtualBox, gh et plumber sont installés
         run: |
@@ -74,7 +77,7 @@ jobs:
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             VERSION="${GITHUB_REF_NAME#v}"
           else
-            VERSION=$(date -u +'%Y.%m.0')
+            VERSION=$(date -u +'%Y.%m.%d%H%M')
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
@@ -113,7 +116,7 @@ jobs:
 
       - name: Comparer au contenu de la dernière Release publiée
         id: diff_check
-        if: github.event_name == 'push'
+        if: github.event_name != 'push'
         env:
           GH_TOKEN: ${{ github.token }}
           FORCE: ${{ inputs.force_publish || false }}
@@ -131,7 +134,7 @@ jobs:
 
       - name: Attestation de build (provenance)
         if: github.event_name == 'push' || steps.diff_check.outputs.publish == 'true'
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
             packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/*.ova

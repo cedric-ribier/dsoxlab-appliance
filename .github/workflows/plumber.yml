@@ -5,15 +5,19 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: read
-  security-events: write
+permissions: {}
 
 jobs:
   plumber:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read          # checkout
+      security-events: write  # upload du SARIF vers l'onglet Security
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Plumber — analyse CI/CD + upload SARIF
         uses: getplumber/plumber@10837e44cddfed934eaa2b509e677286af23e149 # v0.4.63
