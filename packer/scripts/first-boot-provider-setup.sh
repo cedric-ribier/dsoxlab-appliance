@@ -18,6 +18,13 @@ detect_nested_virt() {
   return 1
 }
 
+# Image construite avec providers=all : tout est déjà là, rien à refaire.
+if command -v virsh >/dev/null 2>&1 && command -v incus >/dev/null 2>&1; then
+  log "Providers déjà présents dans l'image — rien à installer."
+  systemctl disable dsoxlab-provider-setup.service 2>/dev/null || true
+  exit 0
+fi
+
 if ! detect_nested_virt; then
   log "Virtualisation imbriquée non détectée — providers vm non installés. Labs shell disponibles normalement. Le service retentera au prochain démarrage."
   exit 0
@@ -39,7 +46,9 @@ apt-get install -y \
 usermod -aG libvirt,kvm user
 systemctl enable --now libvirtd
 
-echo "  /var/lib/libvirt/images/** rwk," >> /etc/apparmor.d/local/abstractions/libvirt-qemu
+regle='  /var/lib/libvirt/images/** rwk,'
+fichier=/etc/apparmor.d/local/abstractions/libvirt-qemu
+grep -qxF "$regle" "$fichier" 2>/dev/null || echo "$regle" >> "$fichier"
 
 install -d -m 0755 /etc/apt/keyrings
 curl -fsSL https://pkgs.zabbly.com/key.asc -o /etc/apt/keyrings/zabbly.asc
