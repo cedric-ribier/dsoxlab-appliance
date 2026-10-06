@@ -18,6 +18,14 @@ source "virtualbox-iso" "dsoxlab-appliance" {
   memory    = var.memory_mb
   disk_size = var.disk_size_mb
 
+  # Discard de bout en bout (repris de la recette de Stéphane Robert) :
+  # le TRIM du guest libère réellement les blocs du VDI, au lieu de les
+  # remplir de zéros. Le contrôleur IDE par défaut ne transmet pas le
+  # discard, d'où le SATA.
+  hard_drive_interface     = "sata"
+  hard_drive_discard       = true
+  hard_drive_nonrotational = true
+
   # Installation automatisée via preseed — http_directory sert le fichier
   # au VM pendant le boot de l'ISO netinst.
   http_directory = "http"

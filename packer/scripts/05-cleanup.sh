@@ -147,13 +147,45 @@ WantedBy=multi-user.target
 EOF
 systemctl enable dsoxlab-provider-setup.service
 
-# Remplit puis efface un fichier pour mettre à zéro l'espace libre — réduit
-# la taille de l'export une fois compressé
-# Fill then delete a file to zero out free space — shrinks the export
-# once compressed
-echo "==> Mise à zéro de l'espace libre avant export (peut prendre plusieurs minutes)"
-dd if=/dev/zero of=/EMPTY bs=1M 2>/dev/null || true
-rm -f /EMPTY
+# Allègement avant export : un seul noyau, swap et espace libre rendus
+# au disque virtuel (discard, voir hard_drive_discard dans le .pkr.hcl).
+# Slimming before export: one kernel only, swap and free space handed
+# back to the virtual disk (discard).
+echo "==> Allègement de l'image (noyaux, swap, fstrim)"
+
+# Le full-upgrade du preseed installe un noyau plus récent que celui de
+# l'ISO, et l'ancien reste : apt autoremove protège les noyaux récents.
+# On garde celui que tire le métapaquet linux-image-amd64 ; on refuse de
+# toucher au noyau en cours d'exécution.
+garde=$(dpkg-query -W -f='${Depends}' linux-image-amd64 | grep -o 'linux-image-[0-9][^ ,]*')
+courant="linux-image-$(uname -r)"
+echo "Noyaux installés : $(ls /boot/vmlinuz-* | xargs -n1 basename | tr '\n' ' ')"
+echo "Noyau conservé : $garde (en cours : $courant)"
+for paquet in $(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 'linux-image-[0-9]*' 2>/dev/null | awk '$1 == "ii" {print $2}'); do
+  [ "$paquet" = "$garde" ] && continue
+  if [ "$paquet" = "$courant" ]; then
+    echo "refus : $paquet est le noyau en cours d'exécution" >&2
+    exit 1
+  fi
+  echo "Purge de l'ancien noyau : $paquet"
+  apt-get purge -y "$paquet"
+done
+
+# Un seul noyau : un ancien noyau laissé par la mise à jour pèse
+# plusieurs centaines de Mo pour rien.
+test "$(ls /boot/vmlinuz-* | wc -l)" -eq 1 \
+  || { echo "plus d'un noyau installé : l'image serait inutilement lourde" >&2; exit 1; }
+
+# Swap : rendue au disque puis recréée avec le même UUID (fstab inchangé).
+# Le dd précédent ne la touchait pas.
+for dev in $(awk 'NR>1 {print $1}' /proc/swaps); do
+  uuid=$(blkid -s UUID -o value "$dev") || continue
+  swapoff "$dev" && blkdiscard -f "$dev" && mkswap -q -U "$uuid" "$dev"
+done
+
+# Rend l'espace libre au VDI : fstrim affiche ce qu'il a libéré.
+fstrim -av
+df -m /
 sync
 
 echo "==> 05-cleanup: terminé"
