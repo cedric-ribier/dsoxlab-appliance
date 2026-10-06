@@ -161,7 +161,7 @@ garde=$(dpkg-query -W -f='${Depends}' linux-image-amd64 | grep -o 'linux-image-[
 courant="linux-image-$(uname -r)"
 echo "Noyaux installés : $(ls /boot/vmlinuz-* | xargs -n1 basename | tr '\n' ' ')"
 echo "Noyau conservé : $garde (en cours : $courant)"
-for paquet in $(dpkg-query -W -f='${Package}\n' 'linux-image-[0-9]*' 2>/dev/null); do
+for paquet in $(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 'linux-image-[0-9]*' 2>/dev/null | awk '$1 == "ii" {print $2}'); do
   [ "$paquet" = "$garde" ] && continue
   if [ "$paquet" = "$courant" ]; then
     echo "refus : $paquet est le noyau en cours d'exécution" >&2
