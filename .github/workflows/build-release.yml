@@ -1,19 +1,11 @@
 name: Build & Release dsoxlab-appliance
 
 on:
-  # Cadence mensuelle — voir PLAN.md §1.5 : build tenté chaque mois,
-  # publication conditionnelle seulement si le contenu a changé.
-  schedule:
-    - cron: '0 3 1 * *'   # 1er du mois, 03h00 UTC
-  # Déclenchement manuel pour tester ou forcer une publication
-  workflow_dispatch:
-    inputs:
-      force_publish:
-        description: 'Publier même si aucun changement détecté'
-        type: boolean
-        default: false
+  # Release à la main : pousser un tag vX.Y.Z construit ET publie.
   push:
-    tags: ['v*']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  # Build d'essai sur n'importe quelle branche : ne publie jamais.
+  workflow_dispatch:
 
 permissions: {}
 
@@ -73,11 +65,17 @@ jobs:
 
       - name: Déterminer la version
         id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$REF_TYPE" = "tag" ]; then
+            VERSION="${REF_NAME#v}"
+            [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+              || { echo "::error::tag « $REF_NAME » hors convention vX.Y.Z"; exit 1; }
           else
-            VERSION=$(date -u +'%Y.%m.%d%H%M')
+            VERSION="0.0.0-essai.${RUN_NUMBER}"   # build d'essai, jamais publié
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
@@ -107,33 +105,9 @@ jobs:
           else
             echo "needs_compression=false" >> "$GITHUB_OUTPUT"
           fi
-      
-      - name: Calculer le hash de contenu
-        id: content_hash
-        run: |
-          CURRENT_SHA=$(git rev-parse HEAD:packer)
-          echo "current_sha=$CURRENT_SHA" >> "$GITHUB_OUTPUT"
-
-      - name: Comparer au contenu de la dernière Release publiée
-        id: diff_check
-        if: github.event_name != 'push'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          FORCE: ${{ inputs.force_publish || false }}
-          CURRENT_SHA: ${{ steps.content_hash.outputs.current_sha }}
-        run: |
-          LATEST_SHA=$(gh release view --json body \
-            --jq '.body | capture("content-hash: (?<h>[0-9a-f]+)").h' 2>/dev/null || echo "none")
-          echo "Dernière Release : ${LATEST_SHA} — contenu actuel : ${CURRENT_SHA}"
-          if [ "$FORCE" = "true" ] || [ "$LATEST_SHA" != "$CURRENT_SHA" ]; then
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            echo "Aucun changement détecté — pas de publication."
-          fi
 
       - name: Attestation de build (provenance)
-        if: github.event_name == 'push' || steps.diff_check.outputs.publish == 'true'
+        if: github.event_name == 'push'
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
@@ -141,9 +115,11 @@ jobs:
             packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/*.qcow2
 
       - name: Publier sur GitHub Releases
-        if: github.event_name == 'push' || steps.diff_check.outputs.publish == 'true'
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          SIZE_MB: ${{ steps.size_check.outputs.size_mb }}
         run: |
           # Appel direct à gh plutôt que l'action tierce
           # softprops/action-gh-release — signalée par Plumber comme
@@ -152,10 +128,14 @@ jobs:
           # que d'épingler une dépendance tierce évitable ; gh est déjà
           # utilisé de la même façon dans la procédure manuelle
           # documentée dans RELEASE.md.
-          gh release create "v${{ steps.version.outputs.version }}" \
-            "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/dsoxlab-appliance-${{ steps.version.outputs.version }}.ova" \
-            "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/dsoxlab-appliance-${{ steps.version.outputs.version }}.qcow2" \
-            "packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}/SHA256SUMS" \
-            --title "v${{ steps.version.outputs.version }}" \
-            --notes "content-hash: ${{ steps.content_hash.outputs.current_sha }}
-          Taille OVA : ${{ steps.size_check.outputs.size_mb }} Mo"
+          #
+          # --verify-tag : refuse de créer le tag s'il n'existe pas déjà
+          # sur le dépôt. La Release ne peut naître que d'un tag poussé.
+          DIR="packer/output/dsoxlab-appliance-${VERSION}"
+          gh release create "v${VERSION}" \
+            "${DIR}/dsoxlab-appliance-${VERSION}.ova" \
+            "${DIR}/dsoxlab-appliance-${VERSION}.qcow2" \
+            "${DIR}/SHA256SUMS" \
+            --verify-tag \
+            --title "v${VERSION}" \
+            --notes "Taille OVA : ${SIZE_MB} Mo"

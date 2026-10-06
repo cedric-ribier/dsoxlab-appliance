@@ -23,8 +23,10 @@ dsoxlab/
     ├── LICENSE                   # Apache License 2.0
     ├── .gitignore
     ├── .github/
+    │   ├── dependabot.yml           # PR mensuelle de mise à jour des actions épinglées
     │   └── workflows/
-    │       └── build-release.yml    # build mensuel, publication conditionnelle
+    │       ├── build-release.yml    # tag vX.Y.Z = build + publication ; manuel = build d'essai
+    │       └── plumber.yml          # scan de conformité CI sur PR/push, SARIF vers Security
     └── packer/
         ├── dsoxlab-appliance.pkr.hcl  # définition source + build
         ├── variables.pkr.hcl        # version, ressources, scope providers
