@@ -2,8 +2,10 @@
 
 *[English version](RELEASE.md)*
 
-Procédure manuelle — aucun runner CI n'est encore configuré (voir
-`PLAN.md`, questions ouvertes). À suivre intégralement pour tout
+La publication est faite par la CI (`build-release.yml`, runner
+self-hosted) quand un tag `vX.Y.Z` est poussé — voir l'étape 6. Le
+build et la validation en local ci-dessous restent un préalable. À
+suivre intégralement pour tout
 nouveau build ; sauter la validation double-hyperviseur (étape 4) est
 exactement ce qui a laissé passer plusieurs bugs lors du développement,
 invisibles avec un seul hyperviseur testé.
@@ -334,21 +336,52 @@ build-*.log
 avant un tag de release.
 
 
+### Tag sur `main`, après fusion de la PR
+
+Les modifications arrivent sur `main` par une pull request, jamais par
+un push direct. Une fois la PR fusionnée, on tague `main` à jour :
+
 ```bash
-git add .
-git commit -m "..."
-git tag vX.Y.Z
-git push origin main --tags
+git switch main
+git pull --ff-only
+git tag -a vX.Y.Z -m "dsoxlab-appliance X.Y.Z"
+git push origin vX.Y.Z
 ```
 
-Publication manuelle (pas de runner CI configuré pour l'instant) :
+- `-a` crée un tag annoté (auteur, date, message), pas un simple
+  pointeur.
+- On pousse **ce tag seul** : `--tags` pousserait aussi tout tag local
+  égaré.
+- Seul `vX.Y.Z` (trois nombres) déclenche une publication ; `v1.2` ou
+  `v1.2.3-rc1` sont ignorés par le workflow.
+
+### Ce que fait la CI
+
+Le push du tag lance `build-release.yml` sur le runner self-hosted,
+qui doit être démarré (`actions-runner/run.sh`) — sinon le job reste
+*Queued* jusqu'à son lancement. La CI construit, atteste la
+provenance, puis publie la Release `vX.Y.Z` avec l'OVA, le qcow2 et
+`SHA256SUMS`.
+
+Build d'essai sans publication : **Actions → Build & Release →
+Run workflow** sur n'importe quelle branche (version `0.0.0-essai.N`).
+
+### Secours : publication manuelle
+
+Uniquement si la CI ne peut pas tourner (runner indisponible), après
+avoir poussé le tag, depuis la racine du dépôt :
+
 ```bash
 gh release create vX.Y.Z \
-  output/dsoxlab-appliance-X.Y.Z/dsoxlab-appliance-X.Y.Z.ova \
-  output/dsoxlab-appliance-X.Y.Z/SHA256SUMS \
+  packer/output/dsoxlab-appliance-X.Y.Z/dsoxlab-appliance-X.Y.Z.ova \
+  packer/output/dsoxlab-appliance-X.Y.Z/dsoxlab-appliance-X.Y.Z.qcow2 \
+  packer/output/dsoxlab-appliance-X.Y.Z/SHA256SUMS \
+  --verify-tag \
   --title "vX.Y.Z" \
   --notes "..."
 ```
+
+Pas d'attestation de provenance dans ce cas : seule la CI la produit.
 
 ## 7. Vérification post-publication
 

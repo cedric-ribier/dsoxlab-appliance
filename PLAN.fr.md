@@ -150,11 +150,17 @@ première tentative :
 ## 5. CI et publication
 
 ### Cadence
-Tentative de build automatique mensuelle ; publication seulement si le
-contenu du build a réellement changé depuis la dernière Release
-publiée (diff sur un hash de contenu) — résout la tension entre
-"publier selon un calendrier fixe" et "republier seulement si la base
-change" (un cadrage plus étroit de la même question posé plus tôt).
+Release à la demande, au rythme du mainteneur : pousser un tag
+`vX.Y.Z` construit **et** publie. Un lancement manuel
+(`workflow_dispatch`) est un build d'essai, sur n'importe quelle
+branche, qui ne publie jamais. Le tag doit déjà exister sur le dépôt
+(`gh release create --verify-tag`) : une Release ne peut naître que
+d'un tag poussé.
+
+Remplace une première approche, un build mensuel avec publication
+conditionnelle (diff sur un hash de contenu). Abandonnée : une image
+ne vaut d'être republiée que lorsque quelqu'un l'a décidé, et le
+calendrier produisait surtout des builds que personne n'avait demandés.
 
 ### Runner
 `virtualbox-iso` nécessite une vraie installation VirtualBox. GitHub
