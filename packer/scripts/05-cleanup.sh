@@ -151,9 +151,22 @@ systemctl enable dsoxlab-provider-setup.service
 # la taille de l'export une fois compressé
 # Fill then delete a file to zero out free space — shrinks the export
 # once compressed
-echo "==> Mise à zéro de l'espace libre avant export (peut prendre plusieurs minutes)"
-dd if=/dev/zero of=/EMPTY bs=1M 2>/dev/null || true
-rm -f /EMPTY
+echo "==> Libération de l'espace libre (fstrim)"
+# Un seul noyau : un ancien noyau laissé par la mise à jour pèse
+# plusieurs centaines de Mo pour rien.
+test "$(ls /boot/vmlinuz-* | wc -l)" -eq 1 \
+  || { echo "plus d'un noyau installé : l'image serait inutilement lourde" >&2; exit 1; }
+
+# Swap : rendue au disque puis recréée avec le même UUID (fstab inchangé).
+# Le dd précédent ne la touchait pas.
+for dev in $(awk 'NR>1 {print $1}' /proc/swaps); do
+  uuid=$(blkid -s UUID -o value "$dev") || continue
+  swapoff "$dev" && blkdiscard -f "$dev" && mkswap -q -U "$uuid" "$dev"
+done
+
+# Rend l'espace libre au VDI : fstrim affiche ce qu'il a libéré.
+fstrim -av
+df -m /
 sync
 
 echo "==> 05-cleanup: terminé"
