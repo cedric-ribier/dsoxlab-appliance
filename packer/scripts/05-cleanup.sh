@@ -147,11 +147,11 @@ WantedBy=multi-user.target
 EOF
 systemctl enable dsoxlab-provider-setup.service
 
-# Remplit puis efface un fichier pour mettre à zéro l'espace libre — réduit
-# la taille de l'export une fois compressé
-# Fill then delete a file to zero out free space — shrinks the export
-# once compressed
-echo "==> Libération de l'espace libre (fstrim)"
+# Allègement avant export : un seul noyau, swap et espace libre rendus
+# au disque virtuel (discard, voir hard_drive_discard dans le .pkr.hcl).
+# Slimming before export: one kernel only, swap and free space handed
+# back to the virtual disk (discard).
+echo "==> Allègement de l'image (noyaux, swap, fstrim)"
 
 # Le full-upgrade du preseed installe un noyau plus récent que celui de
 # l'ISO, et l'ancien reste : apt autoremove protège les noyaux récents.
