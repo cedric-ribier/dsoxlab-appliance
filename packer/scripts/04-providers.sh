@@ -14,7 +14,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 # Installation de KVM/libvirt si le scope le demande
 # Install KVM/libvirt if the scope requests it
-if [ "$PROVIDERS" = "none" ] || [ "$PROVIDERS" = "kvm" ]; then
+if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "kvm" ]; then
   echo "==> Installation KVM/libvirt"
   apt-get install -y \
     qemu-kvm \
@@ -27,14 +27,17 @@ if [ "$PROVIDERS" = "none" ] || [ "$PROVIDERS" = "kvm" ]; then
   usermod -aG libvirt,kvm packer
   systemctl enable libvirtd
 
-  echo "  /var/lib/libvirt/images/** rwk," >> /etc/apparmor.d/local/abstractions/libvirt-qemu
+regle='  /var/lib/libvirt/images/** rwk,'
+fichier=/etc/apparmor.d/local/abstractions/libvirt-qemu
+grep -qxF "$regle" "$fichier" 2>/dev/null || echo "$regle" >> "$fichier"
+
 else
   echo "==> KVM/libvirt exclu du scope (DSOXLAB_PROVIDERS=$PROVIDERS)"
 fi
 
 # Installation d'Incus si le scope le demande (dépôt Zabbly)
 # Install Incus if the scope requests it (Zabbly repo)
-if [ "$PROVIDERS" = "none" ] || [ "$PROVIDERS" = "incus" ]; then
+if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "incus" ]; then
   echo "==> Installation Incus"
   install -d -m 0755 /etc/apt/keyrings
   curl -fsSL https://pkgs.zabbly.com/key.asc -o /etc/apt/keyrings/zabbly.asc

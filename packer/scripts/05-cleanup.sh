@@ -147,6 +147,9 @@ WantedBy=multi-user.target
 EOF
 systemctl enable dsoxlab-provider-setup.service
 
+# Caches de uv et mise : inutiles une fois les outils installés.
+rm -rf /root/.cache /home/packer/.cache
+
 # Allègement avant export : un seul noyau, swap et espace libre rendus
 # au disque virtuel (discard, voir hard_drive_discard dans le .pkr.hcl).
 # Slimming before export: one kernel only, swap and free space handed

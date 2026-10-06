@@ -39,10 +39,10 @@ check "ansible installé"        ansible --version
 check "ansible-runner installé" ansible-runner --version
 check "clavier FR configuré" grep -q '^XKBLAYOUT="fr"' /etc/default/keyboard
 
-if [ "$PROVIDERS" = "none" ] || [ "$PROVIDERS" = "kvm" ]; then
+if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "kvm" ]; then
   check "libvirtd activé (boot)"  systemctl is-enabled libvirtd
 fi
-if [ "$PROVIDERS" = "none" ] || [ "$PROVIDERS" = "incus" ]; then
+if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "incus" ]; then
   check "incus activé (boot)"     systemctl is-enabled incus
 fi
 
