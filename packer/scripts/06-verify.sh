@@ -15,7 +15,7 @@ if ! grep -q '^XKBLAYOUT="fr"' /etc/default/keyboard; then
   fi
 fi
 
-PROVIDERS="${DSOXLAB_PROVIDERS:-all}"
+PROVIDERS="${DSOXLAB_PROVIDERS:-none}"
 export PATH="/opt/dsoxlab-appliance/bin:/opt/dsoxlab-appliance/mise/shims:$PATH"
 
 FAIL=0
@@ -39,10 +39,10 @@ check "ansible installé"        ansible --version
 check "ansible-runner installé" ansible-runner --version
 check "clavier FR configuré" grep -q '^XKBLAYOUT="fr"' /etc/default/keyboard
 
-if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "kvm" ]; then
+if [ "$PROVIDERS" = "none" ] || [ "$PROVIDERS" = "kvm" ]; then
   check "libvirtd activé (boot)"  systemctl is-enabled libvirtd
 fi
-if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "incus" ]; then
+if [ "$PROVIDERS" = "none" ] || [ "$PROVIDERS" = "incus" ]; then
   check "incus activé (boot)"     systemctl is-enabled incus
 fi
 

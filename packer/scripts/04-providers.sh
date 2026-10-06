@@ -7,14 +7,14 @@ echo "     PAS de test /dev/kvm ni de démarrage de service ici, voir"
 echo "     PLAN.md §1.2 : le poste de build peut ne pas avoir la"
 echo "     virtualisation imbriquée disponible)"
 
-PROVIDERS="${DSOXLAB_PROVIDERS:-all}"
+PROVIDERS="${DSOXLAB_PROVIDERS:-none}"
 echo "    Scope demandé : ${PROVIDERS}"
 
 export DEBIAN_FRONTEND=noninteractive
 
 # Installation de KVM/libvirt si le scope le demande
 # Install KVM/libvirt if the scope requests it
-if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "kvm" ]; then
+if [ "$PROVIDERS" = "none" ] || [ "$PROVIDERS" = "kvm" ]; then
   echo "==> Installation KVM/libvirt"
   apt-get install -y \
     qemu-kvm \
@@ -34,7 +34,7 @@ fi
 
 # Installation d'Incus si le scope le demande (dépôt Zabbly)
 # Install Incus if the scope requests it (Zabbly repo)
-if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "incus" ]; then
+if [ "$PROVIDERS" = "none" ] || [ "$PROVIDERS" = "incus" ]; then
   echo "==> Installation Incus"
   install -d -m 0755 /etc/apt/keyrings
   curl -fsSL https://pkgs.zabbly.com/key.asc -o /etc/apt/keyrings/zabbly.asc
