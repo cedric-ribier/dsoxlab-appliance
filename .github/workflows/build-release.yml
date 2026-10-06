@@ -139,7 +139,11 @@ jobs:
           fi
           tmp=$(mktemp -d)
           trap 'rm -rf "$tmp"' EXIT
-          "$OVFTOOL" --acceptAllEulas *.ova "$tmp/test.vmx"
+          # --lax : VirtualBox déclare la famille matérielle « virtualbox-2.2 »,
+          # que VMware refuse en strict. C'est l'équivalent du « Réessayer »
+          # proposé par Fusion à l'import. --lax ne désactive PAS le contrôle
+          # du manifest (vérifié : l'OVA 0.2.5 de dsoxlab échoue toujours).
+          "$OVFTOOL" --lax --acceptAllEulas *.ova "$tmp/test.vmx"
 
       - name: Attestation de build (provenance)
         if: github.event_name == 'push'
