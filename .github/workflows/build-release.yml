@@ -1,19 +1,11 @@
 name: Build & Release dsoxlab-appliance
 
 on:
-  # Cadence mensuelle — voir PLAN.md §1.5 : build tenté chaque mois,
-  # publication conditionnelle seulement si le contenu a changé.
-  schedule:
-    - cron: '0 3 1 * *'   # 1er du mois, 03h00 UTC
-  # Déclenchement manuel pour tester ou forcer une publication
-  workflow_dispatch:
-    inputs:
-      force_publish:
-        description: 'Publier même si aucun changement détecté'
-        type: boolean
-        default: false
+  # Release à la main : pousser un tag vX.Y.Z construit ET publie.
   push:
-    tags: ['v*']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  # Build d'essai sur n'importe quelle branche : ne publie jamais.
+  workflow_dispatch:
 
 permissions: {}
 
@@ -73,11 +65,17 @@ jobs:
 
       - name: Déterminer la version
         id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$REF_TYPE" = "tag" ]; then
+            VERSION="${REF_NAME#v}"
+            [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+              || { echo "::error::tag « $REF_NAME » hors convention vX.Y.Z"; exit 1; }
           else
-            VERSION=$(date -u +'%Y.%m.%d%H%M')
+            VERSION="0.0.0-essai.${RUN_NUMBER}"   # build d'essai, jamais publié
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
