@@ -152,6 +152,25 @@ systemctl enable dsoxlab-provider-setup.service
 # Fill then delete a file to zero out free space — shrinks the export
 # once compressed
 echo "==> Libération de l'espace libre (fstrim)"
+
+# Le full-upgrade du preseed installe un noyau plus récent que celui de
+# l'ISO, et l'ancien reste : apt autoremove protège les noyaux récents.
+# On garde celui que tire le métapaquet linux-image-amd64 ; on refuse de
+# toucher au noyau en cours d'exécution.
+garde=$(dpkg-query -W -f='${Depends}' linux-image-amd64 | grep -o 'linux-image-[0-9][^ ,]*')
+courant="linux-image-$(uname -r)"
+echo "Noyaux installés : $(ls /boot/vmlinuz-* | xargs -n1 basename | tr '\n' ' ')"
+echo "Noyau conservé : $garde (en cours : $courant)"
+for paquet in $(dpkg-query -W -f='${Package}\n' 'linux-image-[0-9]*' 2>/dev/null); do
+  [ "$paquet" = "$garde" ] && continue
+  if [ "$paquet" = "$courant" ]; then
+    echo "refus : $paquet est le noyau en cours d'exécution" >&2
+    exit 1
+  fi
+  echo "Purge de l'ancien noyau : $paquet"
+  apt-get purge -y "$paquet"
+done
+
 # Un seul noyau : un ancien noyau laissé par la mise à jour pèse
 # plusieurs centaines de Mo pour rien.
 test "$(ls /boot/vmlinuz-* | wc -l)" -eq 1 \
