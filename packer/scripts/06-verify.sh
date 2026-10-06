@@ -15,7 +15,7 @@ if ! grep -q '^XKBLAYOUT="fr"' /etc/default/keyboard; then
   fi
 fi
 
-PROVIDERS="${DSOXLAB_PROVIDERS:-all}"
+PROVIDERS="${DSOXLAB_PROVIDERS:-none}"
 export PATH="/opt/dsoxlab-appliance/bin:/opt/dsoxlab-appliance/mise/shims:$PATH"
 
 FAIL=0

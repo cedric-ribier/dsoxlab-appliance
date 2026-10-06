@@ -7,7 +7,7 @@ echo "     PAS de test /dev/kvm ni de démarrage de service ici, voir"
 echo "     PLAN.md §1.2 : le poste de build peut ne pas avoir la"
 echo "     virtualisation imbriquée disponible)"
 
-PROVIDERS="${DSOXLAB_PROVIDERS:-all}"
+PROVIDERS="${DSOXLAB_PROVIDERS:-none}"
 echo "    Scope demandé : ${PROVIDERS}"
 
 export DEBIAN_FRONTEND=noninteractive
@@ -27,7 +27,10 @@ if [ "$PROVIDERS" = "all" ] || [ "$PROVIDERS" = "kvm" ]; then
   usermod -aG libvirt,kvm packer
   systemctl enable libvirtd
 
-  echo "  /var/lib/libvirt/images/** rwk," >> /etc/apparmor.d/local/abstractions/libvirt-qemu
+regle='  /var/lib/libvirt/images/** rwk,'
+fichier=/etc/apparmor.d/local/abstractions/libvirt-qemu
+grep -qxF "$regle" "$fichier" 2>/dev/null || echo "$regle" >> "$fichier"
+
 else
   echo "==> KVM/libvirt exclu du scope (DSOXLAB_PROVIDERS=$PROVIDERS)"
 fi
