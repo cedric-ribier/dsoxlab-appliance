@@ -176,7 +176,7 @@ jobs:
           #
           # --verify-tag : refuse de créer le tag s'il n'existe pas déjà
           # sur le dépôt. La Release ne peut naître que d'un tag poussé.
-          DIR="packer/output/dsoxlab-appliance${VERSION}"
+          DIR="packer/output/dsoxlab-appliance-${VERSION}"
           # Brouillon d'abord, envoi des fichiers UN PAR UN avec reprise,
           # publication en dernier. Un envoi qui échoue laisse un brouillon
           # invisible du public, jamais une Release incomplète.
