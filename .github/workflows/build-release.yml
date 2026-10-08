@@ -125,6 +125,12 @@ jobs:
           done
           exit "$depasse"
 
+      - name: SHA256SUMS doit se vérifier
+        # La commande que l'utilisateur lancera après téléchargement :
+        # si elle échoue ici, elle échouera chez lui.
+        working-directory: packer/output/dsoxlab-appliance-${{ steps.version.outputs.version }}
+        run: shasum -a 256 -c SHA256SUMS
+
       - name: L'OVA doit s'importer dans VMware (ovftool)
         # Le défaut de l'OVA 0.2.5 de dsoxlab (SHA du VMDK refusé par
         # VMware) n'était visible qu'à l'import : on importe donc pour de
@@ -171,10 +177,23 @@ jobs:
           # --verify-tag : refuse de créer le tag s'il n'existe pas déjà
           # sur le dépôt. La Release ne peut naître que d'un tag poussé.
           DIR="packer/output/dsoxlab-appliance-${VERSION}"
-          gh release create "v${VERSION}" \
-            "${DIR}/dsoxlab-appliance-${VERSION}.ova" \
-            "${DIR}/dsoxlab-appliance-${VERSION}.qcow2" \
-            "${DIR}/SHA256SUMS" \
-            --verify-tag \
-            --title "v${VERSION}" \
-            --notes "Taille OVA : ${SIZE_MB} Mo"
+          # Brouillon d'abord, envoi des fichiers UN PAR UN avec reprise,
+          # publication en dernier. Un envoi qui échoue laisse un brouillon
+          # invisible du public, jamais une Release incomplète.
+          gh release create "v${VERSION}" --verify-tag --draft \
+            --title "v${VERSION}" --notes "Taille OVA : ${SIZE_MB} Mo"
+
+          for f in "${DIR}/SHA256SUMS" \
+                   "${DIR}/dsoxlab-appliance-${VERSION}.ova" \
+                   "${DIR}/dsoxlab-appliance-${VERSION}.qcow2"; do
+            for essai in 1 2 3; do
+              echo "Envoi de $(basename "$f") (essai ${essai}/3)…"
+              if gh release upload "v${VERSION}" "$f" --clobber; then
+                break
+              fi
+              [ "$essai" -eq 3 ] && { echo "::error::échec de l'envoi de $(basename "$f") après 3 essais — le brouillon v${VERSION} reste à supprimer"; exit 1; }
+              sleep 30
+            done
+          done
+
+          gh release edit "v${VERSION}" --draft=false --latest

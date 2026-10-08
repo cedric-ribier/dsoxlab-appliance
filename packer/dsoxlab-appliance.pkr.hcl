@@ -99,10 +99,6 @@ build {
     ]
   }
 
-  post-processor "checksum" {
-    checksum_types = ["sha256"]
-    output         = "output/dsoxlab-appliance-${var.image_version}/SHA256SUMS"
-  }
 
   post-processor "manifest" {
     output     = "output/dsoxlab-appliance-${var.image_version}/manifest.json"
@@ -115,7 +111,7 @@ build {
      "tar -xf output/dsoxlab-appliance-${var.image_version}/dsoxlab-appliance-${var.image_version}.ova -C output/dsoxlab-appliance-${var.image_version}/qcow2-extract",
      "qemu-img convert -f vmdk -O qcow2 -c output/dsoxlab-appliance-${var.image_version}/qcow2-extract/*.vmdk output/dsoxlab-appliance-${var.image_version}/dsoxlab-appliance-${var.image_version}.qcow2",
      "rm -rf output/dsoxlab-appliance-${var.image_version}/qcow2-extract",
-     "cd output/dsoxlab-appliance-${var.image_version} && (sha256sum dsoxlab-appliance-${var.image_version}.qcow2 2>/dev/null || shasum -a 256 dsoxlab-appliance-${var.image_version}.qcow2) >> SHA256SUMS"
+     "cd output/dsoxlab-appliance-${var.image_version} && (sha256sum dsoxlab-appliance-${var.image_version}.ova dsoxlab-appliance-${var.image_version}.qcow2 2>/dev/null || shasum -a 256 dsoxlab-appliance-${var.image_version}.ova dsoxlab-appliance-${var.image_version}.qcow2) > SHA256SUMS"
    ]
  }
 }
