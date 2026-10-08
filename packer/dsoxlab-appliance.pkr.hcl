@@ -99,10 +99,6 @@ build {
     ]
   }
 
-  post-processor "checksum" {
-    checksum_types = ["sha256"]
-    output         = "output/dsoxlab-appliance-${var.image_version}/SHA256SUMS"
-  }
 
   post-processor "manifest" {
     output     = "output/dsoxlab-appliance-${var.image_version}/manifest.json"
