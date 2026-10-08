@@ -20,7 +20,7 @@ jobs:
           persist-credentials: false
 
       - name: Plumber — analyse CI/CD + upload SARIF
-        uses: getplumber/plumber@10837e44cddfed934eaa2b509e677286af23e149 # v0.4.63
+        uses: getplumber/plumber@fb943e4efba61cf7b0a0c56f6648710a7453519b # v0.5.20
         with:
           # Reprend le .plumber.yaml déjà commité à la racine (auto-détecté).
           min-score: B      # même seuil que le gate CLI dans build-release.yml
